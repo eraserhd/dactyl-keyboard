@@ -597,36 +597,23 @@ def web_post():
     return post
 
 
-def web_post_tr(wide=False):
-    if wide:
-        w_divide = 1.2
-    else:
-        w_divide = 2.0
-
+def web_post_tr():
+    w_divide = 2.0
     return translate(web_post(), ((mount_width / w_divide) - post_adj, (mount_height / 2) - post_adj, 0))
 
 
-def web_post_tl(wide=False):
-    if wide:
-        w_divide = 1.2
-    else:
-        w_divide = 2.0
+def web_post_tl():
+    w_divide = 2.0
     return translate(web_post(), (-(mount_width / w_divide) + post_adj, (mount_height / 2) - post_adj, 0))
 
 
-def web_post_bl(wide=False):
-    if wide:
-        w_divide = 1.2
-    else:
-        w_divide = 2.0
+def web_post_bl():
+    w_divide = 2.0
     return translate(web_post(), (-(mount_width / w_divide) + post_adj, -(mount_height / 2) + post_adj, 0))
 
 
-def web_post_br(wide=False):
-    if wide:
-        w_divide = 1.2
-    else:
-        w_divide = 2.0
+def web_post_br():
+    w_divide = 2.0
     return translate(web_post(), ((mount_width / w_divide) - post_adj, -(mount_height / 2) + post_adj, 0))
 
 
