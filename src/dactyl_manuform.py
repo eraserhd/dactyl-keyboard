@@ -2415,12 +2415,6 @@ def back_wall(skeleton=False):
         lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr(), back=True,
         skeleton=skeleton, skel_bottom=True,
     )])
-    if not skeleton:
-        shape = union([shape,
-            key_wall_brace(
-                lastcol, 0, 0, 1, web_post_tr(), lastcol, 0, 1, 0, web_post_tr()
-            )
-        ])
     return shape
 
 
