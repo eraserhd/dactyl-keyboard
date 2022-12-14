@@ -73,7 +73,8 @@ mount_height = keyswitch_height + 2 * plate_rim;
 mount_thickness = plate_thickness;
 
 centerrow = nrows - centerrow_offset;
-
+lastrow = nrows - 1;
+lastcol = ncols - 1;
 
 cap_top_height = plate_thickness + sa_profile_key_height;
 row_radius = ((mount_height + extra_height) / 2) / (sin(rad2deg(alpha / 2))) + cap_top_height;
@@ -179,13 +180,53 @@ module back_wall() {
     web_post_tl();
     web_post_tr();
   }
-  for 
+  for (x = [1 : ncols - 2]) {
+    wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) {
+     web_post_tl();
+     web_post_tr();
+    }
+    wall_brace(x, 0, 0, 1, x - 1, 0, 0, 1, back=true) {
+      web_post_tl();
+      web_post_tr();
+    }
+  }
+  wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0, back=true) {
+    web_post_tr();
+    web_post_tr();
+  }
+  wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0) {
+    web_post_tr();
+    web_post_tr();
+  }
+}
+
+module right_wall() {
+  y = 0;
+  corner = reduced_outer_cols > 0 ? cornerrow : lastrow;
+  wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) {
+    web_post_tr();
+    web_post_br();
+  }
+  for (y = [1 : corner - 1]) {
+    wall_brace(lastcol, y - 1, 1, 0, lastcol, y, 1, 0) {
+      web_post_br();
+      web_post_tr();
+    }
+    wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) {
+      web_post_tr();
+      web_post_br();
+    }
+  }
+  wall_brace(lastcol, corner, 0, -1, lastcol, corner, 1, 0) {
+    web_post_br();
+    web_post_br();
+  }
 }
 
 module case_walls() {
     back_wall();
     //left_wall();
-    //right_wall();
+    right_wall();
     //front_wall();
 }
 
