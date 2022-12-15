@@ -157,7 +157,7 @@ module bottom_hull(height = 0.001) {
     children();
 }
 
-module wall_brace(place1, x1, y1, dx1, dy1, place2, x2, y2, dx2, dy2, back=false) {
+module wall_brace(place1, dx1, dy1, place2, dx2, dy2, back=false) {
     function wall_locate1(dx, dy) = [dx * wall_thickness, dy * wall_thickness, -1];
     function wall_locate2(dx, dy) = [dx * wall_x_offset, dy * wall_y_offset, -wall_z_offset];
     function wall_locate3(dx, dy, back) = back ?
@@ -172,27 +172,27 @@ module wall_brace(place1, x1, y1, dx1, dy1, place2, x2, y2, dx2, dy2, back=false
         ];
 
     hull() {
-        multmatrix(place1(x1, y1)) children(0);
-        multmatrix(place1(x1, y1)) translate(wall_locate1(dx1, dy1)) children(0);
-        multmatrix(place1(x1, y1)) translate(wall_locate2(dx1, dy1)) children(0);
-        multmatrix(place1(x1, y1)) translate(wall_locate3(dx1, dy1, back)) children(0);
-        multmatrix(place2(x2, y2)) children(1);
-        multmatrix(place2(x2, y2)) translate(wall_locate1(dx2, dy2)) children(1);
-        multmatrix(place2(x2, y2)) translate(wall_locate2(dx2, dy2)) children(1);
-        multmatrix(place2(x2, y2)) translate(wall_locate3(dx2, dy2, back)) children(1);
+        multmatrix(place1) children(0);
+        multmatrix(place1) translate(wall_locate1(dx1, dy1)) children(0);
+        multmatrix(place1) translate(wall_locate2(dx1, dy1)) children(0);
+        multmatrix(place1) translate(wall_locate3(dx1, dy1, back)) children(0);
+        multmatrix(place2) children(1);
+        multmatrix(place2) translate(wall_locate1(dx2, dy2)) children(1);
+        multmatrix(place2) translate(wall_locate2(dx2, dy2)) children(1);
+        multmatrix(place2) translate(wall_locate3(dx2, dy2, back)) children(1);
     }
     bottom_hull() {
-        multmatrix(place1(x1, y1)) translate(wall_locate2(dx1, dy1)) children(0);
-        multmatrix(place1(x1, y1)) translate(wall_locate3(dx1, dy1, back)) children(0);
-        multmatrix(place2(x2, y2)) translate(wall_locate2(dx2, dy2)) children(1);
-        multmatrix(place2(x2, y2)) translate(wall_locate3(dx2, dy2, back)) children(1);
+        multmatrix(place1) translate(wall_locate2(dx1, dy1)) children(0);
+        multmatrix(place1) translate(wall_locate3(dx1, dy1, back)) children(0);
+        multmatrix(place2) translate(wall_locate2(dx2, dy2)) children(1);
+        multmatrix(place2) translate(wall_locate3(dx2, dy2, back)) children(1);
     }
 }
 
 module key_wall_brace(x1, y1, dx1, dy1, x2, y2, dx2, dy2, back=false) {
-  place1 = function(column, row) key_placement_matrix(column, row);
-  place2 = function(column, row) key_placement_matrix(column, row);
-  wall_brace(place1, x1, y1, dx1, dy1, place2, x2, y2, dx2, dy2, back=back) {
+  place1 = key_placement_matrix(x1, y1);
+  place2 = key_placement_matrix(x2, y2);
+  wall_brace(place1, dx1, dy1, place2, dx2, dy2, back=back) {
     children(0);
     children(1);
   }
