@@ -38,6 +38,8 @@ nub_keyswitch_width = 14.4;
 undercut_keyswitch_height = 14.0;
 undercut_keyswitch_width = 14.0;
 
+screws_offset = "INSIDE";
+
 
 column_offsets = [
     [ 0, 0, 0 ],
@@ -57,6 +59,9 @@ wall_thickness = 4.5;
 wall_base_y_thickness = 4.5;
 wall_base_x_thickness = 4.5;
 wall_base_back_thickness = 4.5;
+
+screw_insert_height = 3.8;
+screw_insert_outer_radius = 4.25;
 
 function deg2rad(d) = d*PI/180;
 function rad2deg(r) = r*180/PI;
@@ -181,20 +186,20 @@ module bottom_hull(height = 0.001) {
     children();
 }
 
-module wall_brace(place1, dx1, dy1, place2, dx2, dy2, back=false) {
-    function wall_locate1(dx, dy) = [dx * wall_thickness, dy * wall_thickness, -1];
-    function wall_locate2(dx, dy) = [dx * wall_x_offset, dy * wall_y_offset, -wall_z_offset];
-    function wall_locate3(dx, dy, back) = back ?
-        [
-            dx * (wall_x_offset + wall_base_x_thickness),
-            dy * (wall_y_offset + wall_base_back_thickness),
-            -wall_z_offset
-        ] : [
-            dx * (wall_x_offset + wall_base_x_thickness),
-            dy * (wall_y_offset + wall_base_y_thickness),
-            -wall_z_offset
-        ];
+function wall_locate1(dx, dy) = [dx * wall_thickness, dy * wall_thickness, -1];
+function wall_locate2(dx, dy) = [dx * wall_x_offset, dy * wall_y_offset, -wall_z_offset];
+function wall_locate3(dx, dy, back) = back ?
+    [
+        dx * (wall_x_offset + wall_base_x_thickness),
+        dy * (wall_y_offset + wall_base_back_thickness),
+        -wall_z_offset
+    ] : [
+        dx * (wall_x_offset + wall_base_x_thickness),
+        dy * (wall_y_offset + wall_base_y_thickness),
+        -wall_z_offset
+    ];
 
+module wall_brace(place1, dx1, dy1, place2, dx2, dy2, back=false) {
     hull() {
         multmatrix(place1) children(0);
         multmatrix(place1) translate(wall_locate1(dx1, dy1)) children(0);
@@ -321,10 +326,49 @@ module front_wall() {
 }
 
 module case_walls() {
-    back_wall();
-    left_wall();
-    right_wall();
-    front_wall();
+  back_wall();
+  left_wall();
+  right_wall();
+  front_wall();
 }
 
-case_walls();
+screws_offsets = [
+  ["INSIDE",   wall_base_x_thickness, -wall_base_x_thickness/2, -wall_base_y_thickness/2,  -wall_base_y_thickness/3],
+  ["OUTSIDE",  0,                     wall_base_x_thickness/2,  wall_base_y_thickness*2/3, wall_base_y_thickness*2/3],
+  ["ORIGINAL", 0,                     0,                        0,                         0]
+];
+
+function screw_insert_position(column, row) =
+  let(
+    shift_right = column == lastcol,
+    shift_left = column == 0,
+    shift_up = !(shift_right || shift_left) && row == 0,
+    shift_down = !(shift_right || shift_left) && row >= lastrow,
+    
+    shift_left_adjust = lookup(screws_offsets, screws_offset, 1),
+    shift_right_adjust = lookup(screws_offsets, screws_offset, 2),
+    shift_down_adjust = lookup(screws_offsets, screws_offset, 3),
+    shift_up_adjust = lookup(screws_offsets, screws_offset, 4),
+    
+    up_position = key_placement_matrix(column, row) * concat(wall_locate2(0, 1) + [0, (mount_height / 2) + shift_up_adjust, 0], [1]),
+    down_position = key_placement_matrix(column, row) * concat(wall_locate2(0, -1) - [0, (mount_height / 2) + shift_down_adjust, 0], [1]),
+    left_position = (left_key_placement_matrix(row, 0) * [0, 0, 0, 1]) + wall_locate3(-1, 0) + [shift_left_adjust, 0, 0],
+    right_position = key_placement_matrix(column, row) * concat(wall_locate2(1, 0) + [mount_height/2, 0, 0] + [shift_right_adjust, 0, 0], [1])
+  )
+  shift_up ? up_position : (shift_down ? down_position : (shift_left ? left_position : right_position));
+
+module screw_insert_outer() {
+  cylinder(r = screw_insert_outer_radius, h = screw_insert_height + 1.5, center = true);
+  translate([0, 0, screw_insert_height / 2]) sphere(r = screw_insert_outer_radius);
+}
+
+module screw_insert_outers(offset=0.0) {
+  translate(screw_insert_position(0, 0)) screw_insert_outer();
+}
+
+module model_side() {
+  case_walls();
+  screw_insert_outers();
+}
+
+model_side();
