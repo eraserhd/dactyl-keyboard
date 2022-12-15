@@ -84,31 +84,45 @@ column_radius = ((mount_width + extra_width) / 2) / sin(rad2deg(beta / 2)) + cap
 column_x_delta = -1 - column_radius * sin(rad2deg(beta));
 column_base_angle = beta * (centercol - 2);
 
-module key_place(column, row) {
-    column_angle = beta * (centercol - column);
-    translate([0, 0, keyboard_z_offset])
-        rotate([0, rad2deg(tenting_angle), 0]) {
-            if (column_style == "orthographic") {
-                column_z_delta = column_radius * (1 - cos(rad2deg(column_angle)));
-                translate(column_offsets[column])
-                translate([-(column - centercol) * column_x_delta, 0, column_z_delta])
-                rotate([0, rad2deg(column_angle), 0])
-                translate([0, 0, row_radius])
-                rotate([rad2deg(alpha * (centerrow - row)), 0, 0])
-                translate([0, 0, -row_radius])
-                children();
-            }
-            if (column_style == "fixed") {
-                //FIXME: Implement
-                assert(false, "column_style fixed is not implemented");
-            }
-            if (column_style != "orthographic" && column_style != "fixed") {
-                //FIXME: Implement
-                assert(false, "other column styles not implemented");
-            }
-        }
-}
+function translate_matrix(pos) =
+    [[1, 0, 0, pos.x],
+     [0, 1, 0, pos.y],
+     [0, 0, 1, pos.z],
+     [0, 0, 0, 1    ]];
+function rotate_x_matrix(rad) =
+    let(deg = rad2deg(-rad))
+    [[1,         0,        0, 0],
+     [0,  cos(deg), sin(deg), 0],
+     [0, -sin(deg), cos(deg), 0],
+     [0,         0,        0, 1]];
+function rotate_y_matrix(rad) =
+    let(deg = rad2deg(-rad))
+    [[cos(deg), 0, -sin(deg), 0],
+     [       0, 1,         0, 0],
+     [sin(deg), 0,  cos(deg), 0],
+     [       0, 0,         0, 1]];
 
+function orthographic_key_placement_matrix(column, row) =
+    let(
+        column_angle = beta * (centercol - column),
+        column_z_delta = column_radius * (1 - cos(rad2deg(column_angle)))
+    )
+    translate_matrix([0, 0, keyboard_z_offset]) *
+    rotate_y_matrix(tenting_angle) *
+    translate_matrix(column_offsets[column]) *
+    translate_matrix([-(column - centercol) * column_x_delta, 0, column_z_delta]) *
+    rotate_y_matrix(column_angle) *
+    translate_matrix([0, 0, row_radius]) *
+    rotate_x_matrix(alpha * (centerrow - row)) *
+    translate_matrix([0, 0, -row_radius]);
+
+function key_placement_matrix(column, row, column_style) =
+    let (_ = assert(column_style == "orthographic", "Only orthographic is implemented."))
+    orthographic_key_placement_matrix(column, row);
+
+module key_place(column, row) {
+    multmatrix(key_placement_matrix(column, row, column_style)) children();
+}
 
 module web_post() {
     translate([0, 0, plate_thickness - (web_thickness / 2)])
@@ -177,51 +191,24 @@ module wall_brace(x1, y1, dx1, dy1, x2, y2, dx2, dy2, back=false) {
 
 module back_wall() {
   x = 0;
-  wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) {
-    web_post_tl();
-    web_post_tr();
-  }
+  wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
   for (x = [1 : ncols - 2]) {
-    wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) {
-     web_post_tl();
-     web_post_tr();
-    }
-    wall_brace(x, 0, 0, 1, x - 1, 0, 0, 1, back=true) {
-      web_post_tl();
-      web_post_tr();
-    }
+    wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
+    wall_brace(x, 0, 0, 1, x - 1, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
   }
-  wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0, back=true) {
-    web_post_tr();
-    web_post_tr();
-  }
-  wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0) {
-    web_post_tr();
-    web_post_tr();
-  }
+  wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0, back=true) { web_post_tr(); web_post_tr(); }
+  wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0) { web_post_tr(); web_post_tr(); }
 }
 
 module right_wall() {
   y = 0;
   corner = reduced_outer_cols > 0 ? cornerrow : lastrow;
-  wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) {
-    web_post_tr();
-    web_post_br();
-  }
+  wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) { web_post_tr(); web_post_br(); }
   for (y = [1 : corner - 1]) {
-    wall_brace(lastcol, y - 1, 1, 0, lastcol, y, 1, 0) {
-      web_post_br();
-      web_post_tr();
-    }
-    wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) {
-      web_post_tr();
-      web_post_br();
-    }
+    wall_brace(lastcol, y - 1, 1, 0, lastcol, y, 1, 0) { web_post_br(); web_post_tr(); }
+    wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) { web_post_tr(); web_post_br(); }
   }
-  wall_brace(lastcol, corner, 0, -1, lastcol, corner, 1, 0) {
-    web_post_br();
-    web_post_br();
-  }
+  wall_brace(lastcol, corner, 0, -1, lastcol, corner, 1, 0) { web_post_br(); web_post_br(); }
 }
 
 module front_wall() {
