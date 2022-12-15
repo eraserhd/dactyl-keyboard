@@ -120,6 +120,12 @@ function key_placement_matrix(column, row, column_style=column_style) =
     let (_ = assert(column_style == "orthographic", "Only orthographic is implemented."))
     orthographic_key_placement_matrix(column, row);
 
+function left_key_placement_matrix(row, direction) =
+    let (
+      pos = key_placement_matrix(0, row) * [-mount_width * 0.5, direction * mount_height * 0.5, 0, 1]
+    )
+    translate_matrix([ pos.x, pos.y, pos.z ]);
+
 module key_place(column, row) {
     multmatrix(key_placement_matrix(column, row, column_style)) children();
 }
@@ -221,7 +227,51 @@ module right_wall() {
 }
 
 module left_wall() {
-  //FIXME:
+  wall_brace(
+    key_placement_matrix(0, 0), 0, 1,
+    left_key_placement_matrix(0, 1), 0, 1
+  ) {
+    web_post_tl();
+    web_post();
+  }
+  wall_brace(
+    left_key_placement_matrix(0, 1), 0, 1,
+    left_key_placement_matrix(0, 1), -1, 0
+  ) {
+    web_post();
+    web_post();
+  }
+  corner = reduced_inner_cols > 0 ? cornerrow : lastrow;
+  for (y = [0 : corner]) {
+    wall_brace(
+      left_key_placement_matrix(y, 1), -1, 0,
+      left_key_placement_matrix(y, -1), -1, 0
+    ) {
+      web_post();
+      web_post();
+    }
+    hull() {
+      key_place(0, y) web_post_tl();
+      key_place(0, y) web_post_bl();
+      multmatrix(left_key_placement_matrix(y, 1)) web_post();
+      multmatrix(left_key_placement_matrix(y, -1)) web_post();
+    }
+  }
+  for (y = [1 : corner]) {
+    wall_brace(
+      left_key_placement_matrix(y - 1, -1), -1, 0,
+      left_key_placement_matrix(y, 1), -1, 0
+    ) {
+      web_post();
+      web_post();
+    }
+    hull() {
+      key_place(0, y) web_post_tl();
+      key_place(0, y-1) web_post_bl();
+      multmatrix(left_key_placement_matrix(y, 1)) web_post();
+      multmatrix(left_key_placement_matrix(y-1, -1)) web_post();
+    }
+  }
 }
 
 module front_wall() {
