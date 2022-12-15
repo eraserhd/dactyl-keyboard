@@ -61,12 +61,26 @@ wall_base_back_thickness = 4.5;
 function deg2rad(d) = d*PI/180;
 function rad2deg(r) = r*180/PI;
 
-keyswitch_height = (plate_style == "NUB" || plate_style == "HS_NUB") ? nub_keyswitch_height :
-                   (plate_style == "UNDERCUT" || plate_style == "HS_UNDERCUT" || plate_style == "NOTCH" || plate_style == "HS_NOTCH") ? undercut_keyswitch_height :
-                   hole_keyswitch_height;
-keyswitch_width = (plate_style == "NUB" || plate_style == "HS_NUB") ? nub_keyswitch_width :
-                   (plate_style == "UNDERCUT" || plate_style == "HS_UNDERCUT" || plate_style == "NOTCH" || plate_style == "HS_NOTCH") ? undercut_keyswitch_width :
-                   hole_keyswitch_width;
+plate_styles = [
+  ["HOLE",        hole_keyswitch_height,     hole_keyswitch_width],
+  ["NUB",         nub_keyswitch_height,      nub_keyswitch_width],
+  ["HS_NUB",      nub_keyswitch_height,      nub_keyswitch_width],
+  ["UNDERCUT",    undercut_keyswitch_height, undercut_keyswitch_width],
+  ["HS_UNDERCUT", undercut_keyswitch_height, undercut_keyswitch_width],
+  ["NOTCH",       undercut_keyswitch_height, undercut_keyswitch_width],
+  ["HS_NOTCH",    undercut_keyswitch_height, undercut_keyswitch_width]
+];
+
+function lookup(table, key, column=false) =
+  let (
+    matching_rows = [for (i = [0 : len(table)]) if (table[i][0] == key) table[i]],
+    _ = assert(len(matching_rows) > 0, "Invalid key " + key + " for table."),
+    _ = assert(len(matching_rows) < 2, "Table has multiple matching keys.")
+  )
+  (column == false) ? matching_rows[0] : matching_rows[0][column];
+
+keyswitch_height = lookup(plate_styles, plate_style, 1);
+keyswitch_width = lookup(plate_styles, plate_style, 2);
 
 mount_width = keyswitch_width + 2 * plate_rim;
 mount_height = keyswitch_height + 2 * plate_rim;
