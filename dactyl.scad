@@ -207,7 +207,7 @@ module key_wall_brace(x1, y1, dx1, dy1, x2, y2, dx2, dy2, back=false) {
 module back_wall() {
   x = 0;
   key_wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
-  for (x = [1 : ncols - 2]) {
+  for (x = [1 : ncols - 1]) {
     key_wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
     key_wall_brace(x, 0, 0, 1, x - 1, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
   }
@@ -219,7 +219,7 @@ module right_wall() {
   y = 0;
   corner = reduced_outer_cols > 0 ? cornerrow : lastrow;
   key_wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) { web_post_tr(); web_post_br(); }
-  for (y = [1 : corner - 1]) {
+  for (y = [1 : corner]) {
     key_wall_brace(lastcol, y - 1, 1, 0, lastcol, y, 1, 0) { web_post_br(); web_post_tr(); }
     key_wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) { web_post_tr(); web_post_br(); }
   }
