@@ -74,8 +74,8 @@ plate_styles = [
 function lookup(table, key, column=false) =
   let (
     matching_rows = [for (i = [0 : len(table)]) if (table[i][0] == key) table[i]],
-    _ = assert(len(matching_rows) > 0, "Invalid key " + key + " for table."),
-    _ = assert(len(matching_rows) < 2, "Table has multiple matching keys.")
+    a1 = assert(len(matching_rows) > 0, str("Invalid key ", key, " for table.")),
+    a2 = assert(len(matching_rows) < 2, "Table has multiple matching keys.")
   )
   (column == false) ? matching_rows[0] : matching_rows[0][column];
 
@@ -116,23 +116,27 @@ function rotate_y_matrix(rad) =
      [sin(deg), 0,  cos(deg), 0],
      [       0, 0,         0, 1]];
 
-function orthographic_key_placement_matrix(column, row) =
-    let(
-        column_angle = beta * (centercol - column),
-        column_z_delta = column_radius * (1 - cos(rad2deg(column_angle)))
-    )
-    translate_matrix([0, 0, keyboard_z_offset]) *
-    rotate_y_matrix(tenting_angle) *
-    translate_matrix(column_offsets[column]) *
-    translate_matrix([-(column - centercol) * column_x_delta, 0, column_z_delta]) *
-    rotate_y_matrix(column_angle) *
-    translate_matrix([0, 0, row_radius]) *
-    rotate_x_matrix(alpha * (centerrow - row)) *
-    translate_matrix([0, 0, -row_radius]);
+column_styles = [
+  ["orthographic",
+   function(column, row)
+     let(
+         column_angle = beta * (centercol - column),
+         column_z_delta = column_radius * (1 - cos(rad2deg(column_angle)))
+     )
+     translate_matrix([0, 0, keyboard_z_offset]) *
+     rotate_y_matrix(tenting_angle) *
+     translate_matrix(column_offsets[column]) *
+     translate_matrix([-(column - centercol) * column_x_delta, 0, column_z_delta]) *
+     rotate_y_matrix(column_angle) *
+     translate_matrix([0, 0, row_radius]) *
+     rotate_x_matrix(alpha * (centerrow - row)) *
+     translate_matrix([0, 0, -row_radius])
+   ]
+];
 
 function key_placement_matrix(column, row, column_style=column_style) =
-    let (_ = assert(column_style == "orthographic", "Only orthographic is implemented."))
-    orthographic_key_placement_matrix(column, row);
+    let (placement_fn = lookup(column_styles, column_style, 1))
+    placement_fn(column, row);
 
 function left_key_placement_matrix(row, direction) =
     let (
