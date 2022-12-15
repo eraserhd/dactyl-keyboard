@@ -353,9 +353,20 @@ function screw_insert_position(column, row) =
     up_position = key_placement_matrix(column, row) * concat(wall_locate2(0, 1) + [0, (mount_height / 2) + shift_up_adjust, 0], [1]),
     down_position = key_placement_matrix(column, row) * concat(wall_locate2(0, -1) - [0, (mount_height / 2) + shift_down_adjust, 0], [1]),
     left_position = (left_key_placement_matrix(row, 0) * [0, 0, 0, 1]) + wall_locate3(-1, 0) + [shift_left_adjust, 0, 0],
-    right_position = key_placement_matrix(column, row) * concat(wall_locate2(1, 0) + [mount_height/2, 0, 0] + [shift_right_adjust, 0, 0], [1])
+    right_position = key_placement_matrix(column, row) * concat(wall_locate2(1, 0) + [mount_height/2, 0, 0] + [shift_right_adjust, 0, 0], [1]),
+
+    long_result = shift_up ? up_position : (shift_down ? down_position : (shift_left ? left_position : right_position))
   )
-  shift_up ? up_position : (shift_down ? down_position : (shift_left ? left_position : right_position));
+  [for (i = [0 : 2]) long_result[i]];
+
+all_screw_insert_positions = [
+  screw_insert_position(0, 0),
+  screw_insert_position(0, cornerrow),
+  screw_insert_position(3, lastrow),
+  screw_insert_position(3, 0),
+  screw_insert_position(lastcol, 0),
+  screw_insert_position(lastcol, cornerrow)
+];
 
 module screw_insert_outer() {
   cylinder(r = screw_insert_outer_radius, h = screw_insert_height + 1.5, center = true);
@@ -363,7 +374,9 @@ module screw_insert_outer() {
 }
 
 module screw_insert_outers(offset=0.0) {
-  translate(screw_insert_position(0, 0)) screw_insert_outer();
+  for (i = [0 : len(all_screw_insert_positions)-1]) {
+    translate(all_screw_insert_positions[i]) screw_insert_outer();
+  }
 }
 
 module model_side() {
