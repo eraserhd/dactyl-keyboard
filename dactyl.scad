@@ -116,7 +116,7 @@ function orthographic_key_placement_matrix(column, row) =
     rotate_x_matrix(alpha * (centerrow - row)) *
     translate_matrix([0, 0, -row_radius]);
 
-function key_placement_matrix(column, row, column_style) =
+function key_placement_matrix(column, row, column_style=column_style) =
     let (_ = assert(column_style == "orthographic", "Only orthographic is implemented."))
     orthographic_key_placement_matrix(column, row);
 
@@ -157,7 +157,7 @@ module bottom_hull(height = 0.001) {
     children();
 }
 
-module wall_brace(x1, y1, dx1, dy1, x2, y2, dx2, dy2, back=false) {
+module wall_brace(place1, x1, y1, dx1, dy1, place2, x2, y2, dx2, dy2, back=false) {
     function wall_locate1(dx, dy) = [dx * wall_thickness, dy * wall_thickness, -1];
     function wall_locate2(dx, dy) = [dx * wall_x_offset, dy * wall_y_offset, -wall_z_offset];
     function wall_locate3(dx, dy, back) = back ?
@@ -172,43 +172,56 @@ module wall_brace(x1, y1, dx1, dy1, x2, y2, dx2, dy2, back=false) {
         ];
 
     hull() {
-        key_place(x1, y1) children(0);
-        key_place(x1, y1) translate(wall_locate1(dx1, dy1)) children(0);
-        key_place(x1, y1) translate(wall_locate2(dx1, dy1)) children(0);
-        key_place(x1, y1) translate(wall_locate3(dx1, dy1, back)) children(0);
-        key_place(x2, y2) children(1);
-        key_place(x2, y2) translate(wall_locate1(dx2, dy2)) children(1);
-        key_place(x2, y2) translate(wall_locate2(dx2, dy2)) children(1);
-        key_place(x2, y2) translate(wall_locate3(dx2, dy2, back)) children(1);
+        multmatrix(place1(x1, y1)) children(0);
+        multmatrix(place1(x1, y1)) translate(wall_locate1(dx1, dy1)) children(0);
+        multmatrix(place1(x1, y1)) translate(wall_locate2(dx1, dy1)) children(0);
+        multmatrix(place1(x1, y1)) translate(wall_locate3(dx1, dy1, back)) children(0);
+        multmatrix(place2(x2, y2)) children(1);
+        multmatrix(place2(x2, y2)) translate(wall_locate1(dx2, dy2)) children(1);
+        multmatrix(place2(x2, y2)) translate(wall_locate2(dx2, dy2)) children(1);
+        multmatrix(place2(x2, y2)) translate(wall_locate3(dx2, dy2, back)) children(1);
     }
     bottom_hull() {
-        key_place(x1, y1) translate(wall_locate2(dx1, dy1)) children(0);
-        key_place(x1, y1) translate(wall_locate3(dx1, dy1, back)) children(0);
-        key_place(x2, y2) translate(wall_locate2(dx2, dy2)) children(1);
-        key_place(x2, y2) translate(wall_locate3(dx2, dy2, back)) children(1);
+        multmatrix(place1(x1, y1)) translate(wall_locate2(dx1, dy1)) children(0);
+        multmatrix(place1(x1, y1)) translate(wall_locate3(dx1, dy1, back)) children(0);
+        multmatrix(place2(x2, y2)) translate(wall_locate2(dx2, dy2)) children(1);
+        multmatrix(place2(x2, y2)) translate(wall_locate3(dx2, dy2, back)) children(1);
     }
+}
+
+module key_wall_brace(x1, y1, dx1, dy1, x2, y2, dx2, dy2, back=false) {
+  place1 = function(column, row) key_placement_matrix(column, row);
+  place2 = function(column, row) key_placement_matrix(column, row);
+  wall_brace(place1, x1, y1, dx1, dy1, place2, x2, y2, dx2, dy2, back=back) {
+    children(0);
+    children(1);
+  }
 }
 
 module back_wall() {
   x = 0;
-  wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
+  key_wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
   for (x = [1 : ncols - 2]) {
-    wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
-    wall_brace(x, 0, 0, 1, x - 1, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
+    key_wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
+    key_wall_brace(x, 0, 0, 1, x - 1, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
   }
-  wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0, back=true) { web_post_tr(); web_post_tr(); }
-  wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0) { web_post_tr(); web_post_tr(); }
+  key_wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0, back=true) { web_post_tr(); web_post_tr(); }
+  key_wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0) { web_post_tr(); web_post_tr(); }
 }
 
 module right_wall() {
   y = 0;
   corner = reduced_outer_cols > 0 ? cornerrow : lastrow;
-  wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) { web_post_tr(); web_post_br(); }
+  key_wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) { web_post_tr(); web_post_br(); }
   for (y = [1 : corner - 1]) {
-    wall_brace(lastcol, y - 1, 1, 0, lastcol, y, 1, 0) { web_post_br(); web_post_tr(); }
-    wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) { web_post_tr(); web_post_br(); }
+    key_wall_brace(lastcol, y - 1, 1, 0, lastcol, y, 1, 0) { web_post_br(); web_post_tr(); }
+    key_wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) { web_post_tr(); web_post_br(); }
   }
-  wall_brace(lastcol, corner, 0, -1, lastcol, corner, 1, 0) { web_post_br(); web_post_br(); }
+  key_wall_brace(lastcol, corner, 0, -1, lastcol, corner, 1, 0) { web_post_br(); web_post_br(); }
+}
+
+module left_wall() {
+  //FIXME:
 }
 
 module front_wall() {
@@ -218,30 +231,30 @@ module front_wall() {
   for (x = [3 : ncols - 1]) {
     if (x < (offset_col - 1)) {
       if (x > 3) {
-        wall_brace(x-1, lastrow, 0, -1, x, lastrow, 0, -1) { web_post_br(); web_post_bl(); }
+        key_wall_brace(x-1, lastrow, 0, -1, x, lastrow, 0, -1) { web_post_br(); web_post_bl(); }
       }
-      wall_brace(x, lastrow, 0, -1, x, lastrow, 0, -1) { web_post_bl(); web_post_br(); }
+      key_wall_brace(x, lastrow, 0, -1, x, lastrow, 0, -1) { web_post_bl(); web_post_br(); }
     } else if (x < offset_col) {
       if (x > 3) {
-        wall_brace(x-1, lastrow, 0, -1, x, lastrow, 0, -1) { web_post_br(); web_post_bl(); }
+        key_wall_brace(x-1, lastrow, 0, -1, x, lastrow, 0, -1) { web_post_br(); web_post_bl(); }
       }
-      wall_brace(x, lastrow, 0, -1, x, lastrow, 0.5, -1) { web_post_bl(); web_post_br(); }
+      key_wall_brace(x, lastrow, 0, -1, x, lastrow, 0.5, -1) { web_post_bl(); web_post_br(); }
     } else if (x == offset_col) {
       wall_bace(x - 1, lastrow, 0.5, -1, x, cornerrow, .5, -1) { web_post_br(); web_post_bl(); }
-      wall_brace(x, cornerrow, .5, -1, x, cornerrow, 0, -1) { web_post_bl(); web_post_br(); }
+      key_wall_brace(x, cornerrow, .5, -1, x, cornerrow, 0, -1) { web_post_bl(); web_post_br(); }
     } else if (x == (offset_col + 1)) {
-      wall_brace(x, cornerrow, 0, -1, x - 1, cornerrow, 0, -1) { web_post_bl(); web_post_br(); }
-      wall_brace(x, cornerrow, 0, -1, x, cornerrow, 0, -1) { web_post_bl();  web_post_br(); }
+      key_wall_brace(x, cornerrow, 0, -1, x - 1, cornerrow, 0, -1) { web_post_bl(); web_post_br(); }
+      key_wall_brace(x, cornerrow, 0, -1, x, cornerrow, 0, -1) { web_post_bl();  web_post_br(); }
     } else {
-      wall_brace(x, cornerrow, 0, -1, x - 1, corner, 0, -1) { web_post_bl(); web_post_br(); }
-      wall_brace(x, cornerrow, 0, -1, x, corner, 0, -1) { web_post_bl(); web_post_br(); }
+      key_wall_brace(x, cornerrow, 0, -1, x - 1, corner, 0, -1) { web_post_bl(); web_post_br(); }
+      key_wall_brace(x, cornerrow, 0, -1, x, corner, 0, -1) { web_post_bl(); web_post_br(); }
     }
   }
 }
 
 module case_walls() {
     back_wall();
-    //left_wall();
+    left_wall();
     right_wall();
     front_wall();
 }
