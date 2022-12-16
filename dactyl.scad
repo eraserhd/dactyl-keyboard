@@ -62,6 +62,13 @@ wall_base_y_thickness = 4.5;
 wall_base_x_thickness = 4.5;
 wall_base_back_thickness = 4.5;
 
+plate_holes = true;
+plate_holes_xy_offset = [ 0.0, 0.0 ];
+plate_holes_width = 14.3;
+plate_holes_height = 14.3;
+plate_holes_diameter = 1.6;
+plate_holes_depth = 20.0;
+
 screw_insert_height = 3.8;
 screw_insert_outer_radius = 4.25;
 
@@ -166,23 +173,35 @@ module key_place(column, row) {
 module single_plate() {
   if (plate_style == "NUB" || plate_style == "HS_NUB") {
     assert(false, "Missing code for nub plate_style.");
-  } else {
-    difference() {
-      translate([0, 0, mount_thickness/2])
-        cube([mount_width, mount_height, mount_thickness], center=true);
-      translate([0, 0, mount_thickness-0.01])
-        cube([keyswitch_width, keyswitch_height, mount_thickness*2 + 0.02], center=true);
-      if (plate_style == "NOTCH" || plate_style == "HS_NOTCH") {
-        translate([0, 0, -clip_thickness + mount_thickness/2]) {
-          cube([notch_width, keyswitch_height + 2*clip_undercut, mount_thickness], center=true);
-          cube([keyswitch_width + 2*clip_undercut, notch_width, mount_thickness], center=true);
-        }
-      } else {
-        assert(false, "not implemented");
+  }
+  difference() {
+    translate([0, 0, mount_thickness/2])
+      cube([mount_width, mount_height, mount_thickness], center=true);
+    translate([0, 0, mount_thickness-0.01])
+      cube([keyswitch_width, keyswitch_height, mount_thickness*2 + 0.02], center=true);
+    if (plate_style == "NOTCH" || plate_style == "HS_NOTCH") {
+      translate([0, 0, -clip_thickness + mount_thickness/2]) {
+        cube([notch_width, keyswitch_height + 2*clip_undercut, mount_thickness], center=true);
+        cube([keyswitch_width + 2*clip_undercut, notch_width, mount_thickness], center=true);
       }
+    } else {
+      assert(false, "not implemented");
+    }
+    if (plate_holes) {
+      half_width = plate_holes_width/2;
+      half_height = plate_holes_height/2;
+      x_off = plate_holes_xy_offset[0];
+      y_off = plate_holes_xy_offset[1];
+      translate([x_off+half_width, y_off+half_height, plate_holes_depth/2-0.01])
+        cylinder(d=plate_holes_diameter, h=plate_holes_depth+0.01, center=true);
+      translate([x_off-half_width, y_off+half_height, plate_holes_depth/2-0.01])
+        cylinder(d=plate_holes_diameter, h=plate_holes_depth+0.01, center=true);
+      translate([x_off-half_width, y_off-half_height, plate_holes_depth/2-0.01])
+        cylinder(d=plate_holes_diameter, h=plate_holes_depth+0.01, center=true);
+      translate([x_off+half_width, y_off-half_height, plate_holes_depth/2-0.01])
+        cylinder(d=plate_holes_diameter, h=plate_holes_depth+0.01, center=true);
     }
   }
-  
 }
 
 module key_holes() {
