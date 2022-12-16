@@ -346,12 +346,12 @@ function screw_insert_position(column, row) =
     shift_left = column == 0,
     shift_up = !(shift_right || shift_left) && row == 0,
     shift_down = !(shift_right || shift_left) && row >= lastrow,
-    
+
     shift_left_adjust = lookup(screws_offsets, screws_offset, 1),
     shift_right_adjust = lookup(screws_offsets, screws_offset, 2),
     shift_down_adjust = lookup(screws_offsets, screws_offset, 3),
     shift_up_adjust = lookup(screws_offsets, screws_offset, 4),
-    
+
     up_position = key_placement_matrix(column, row) * concat(wall_locate2(0, 1) + [0, (mount_height / 2) + shift_up_adjust, 0], [1]),
     down_position = key_placement_matrix(column, row) * concat(wall_locate2(0, -1) - [0, (mount_height / 2) + shift_down_adjust, 0], [1]),
     left_position = (left_key_placement_matrix(row, 0) * [0, 0, 0, 1]) + wall_locate3(-1, 0) + [shift_left_adjust, 0, 0],
@@ -359,7 +359,7 @@ function screw_insert_position(column, row) =
 
     long_result = shift_up ? up_position : (shift_down ? down_position : (shift_left ? left_position : right_position))
   )
-  [for (i = [0 : 2]) long_result[i]];
+  [long_result.x, long_result.y, 0];
 
 all_screw_insert_positions = [
   screw_insert_position(0, 0),
