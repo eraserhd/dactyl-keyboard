@@ -25,6 +25,8 @@ post_adj = 0;
 
 plate_thickness = 5.1;
 plate_rim = 2.0;
+clip_thickness = 1.1;
+clip_undercut = 1.0;
 
 plate_style = "NOTCH";
 
@@ -37,6 +39,7 @@ nub_keyswitch_height = 14.4;
 nub_keyswitch_width = 14.4;
 undercut_keyswitch_height = 14.0;
 undercut_keyswitch_width = 14.0;
+notch_width = 6.0;
 
 screws_offset = "INSIDE";
 
@@ -157,6 +160,45 @@ function left_key_placement_matrix(row, direction) =
 module key_place(column, row) {
     multmatrix(key_placement_matrix(column, row, column_style)) children();
 }
+
+// == key holes ==
+
+module single_plate() {
+  if (plate_style == "NUB" || plate_style == "HS_NUB") {
+    assert(false, "Missing code for nub plate_style.");
+  } else {
+    difference() {
+      translate([0, 0, mount_thickness/2])
+        cube([mount_width, mount_height, mount_thickness], center=true);
+      translate([0, 0, mount_thickness-0.01])
+        cube([keyswitch_width, keyswitch_height, mount_thickness*2 + 0.02], center=true);
+      if (plate_style == "NOTCH" || plate_style == "HS_NOTCH") {
+        translate([0, 0, -clip_thickness + mount_thickness/2]) {
+          cube([notch_width, keyswitch_height + 2*clip_undercut, mount_thickness], center=true);
+          cube([keyswitch_width + 2*clip_undercut, notch_width, mount_thickness], center=true);
+        }
+      } else {
+        assert(false, "not implemented");
+      }
+    }
+  }
+  
+}
+
+module key_holes() {
+  for (column = [0 : ncols-1], row = [0 : nrows-1]) {
+    if ((reduced_inner_cols <= column && column < (ncols - reduced_outer_cols)) || row != lastrow) {
+      key_place(column, row) single_plate();
+    }
+  }
+}
+
+module add_key_holes() {
+  children();
+  key_holes();
+}
+
+// == case walls ==
 
 module web_post() {
     translate([0, 0, plate_thickness - (web_thickness / 2)])
@@ -454,6 +496,7 @@ module cut_off_bottom() {
 module model_side() {
   cut_off_bottom()
     add_controller()
+    add_key_holes()
     add_screw_inserts()
     case_walls();
 }
