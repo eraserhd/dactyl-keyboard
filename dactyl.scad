@@ -188,18 +188,14 @@ module single_plate() {
       assert(false, "not implemented");
     }
     if (plate_holes) {
-      half_width = plate_holes_width/2;
-      half_height = plate_holes_height/2;
-      x_off = plate_holes_xy_offset[0];
-      y_off = plate_holes_xy_offset[1];
-      translate([x_off+half_width, y_off+half_height, plate_holes_depth/2-0.01])
-        cylinder(d=plate_holes_diameter, h=plate_holes_depth+0.01, center=true);
-      translate([x_off-half_width, y_off+half_height, plate_holes_depth/2-0.01])
-        cylinder(d=plate_holes_diameter, h=plate_holes_depth+0.01, center=true);
-      translate([x_off-half_width, y_off-half_height, plate_holes_depth/2-0.01])
-        cylinder(d=plate_holes_diameter, h=plate_holes_depth+0.01, center=true);
-      translate([x_off+half_width, y_off-half_height, plate_holes_depth/2-0.01])
-        cylinder(d=plate_holes_diameter, h=plate_holes_depth+0.01, center=true);
+      for (delta = [[1,1], [-1,1], [-1,-1], [1,-1]]) {
+        translate([
+          plate_holes_xy_offset[0] + delta[0]*(plate_holes_width/2),
+          plate_holes_xy_offset[1] + delta[1]*(plate_holes_height/2),
+          plate_holes_depth/2-0.01
+        ])
+          cylinder(d=plate_holes_diameter, h=plate_holes_depth+0.01, center=true);
+      }
     }
   }
 }
