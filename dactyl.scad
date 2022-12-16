@@ -40,7 +40,6 @@ undercut_keyswitch_width = 14.0;
 
 screws_offset = "INSIDE";
 
-
 column_offsets = [
     [ 0, 0, 0 ],
     [ 0, 0, 0 ],
@@ -342,22 +341,26 @@ screws_offsets = [
 
 function screw_insert_position(column, row) =
   let(
+    left = 1,
+    right = 2,
+    down = 3,
+    up = 4,
+    
     shift_right = column == lastcol,
     shift_left = column == 0,
     shift_up = !(shift_right || shift_left) && row == 0,
     shift_down = !(shift_right || shift_left) && row >= lastrow,
-
-    shift_left_adjust = lookup(screws_offsets, screws_offset, 1),
-    shift_right_adjust = lookup(screws_offsets, screws_offset, 2),
-    shift_down_adjust = lookup(screws_offsets, screws_offset, 3),
-    shift_up_adjust = lookup(screws_offsets, screws_offset, 4),
-
+    
+    shift_direction = shift_up ? up : (shift_down ? down : (shift_left ? left : right)),
+    
+    shift_adjust = lookup(screws_offsets, screws_offset, shift_direction),
+   
     kpm = shift_left ? left_key_placement_matrix(row, 0) : key_placement_matrix(column, row),
-
-    up_position = kpm * concat(wall_locate2(0, 1) + [0, (mount_height / 2) + shift_up_adjust, 0], [1]),
-    down_position = kpm * concat(wall_locate2(0, -1) - [0, (mount_height / 2) + shift_down_adjust, 0], [1]),
-    left_position = kpm *  concat(wall_locate3(-1, 0) + [shift_left_adjust, 0, 0], [1]),
-    right_position = kpm * concat(wall_locate2(1, 0) + [mount_height/2 + shift_right_adjust, 0, 0], [1]),
+    
+    up_position = kpm * concat(wall_locate2(0, 1) + [0, (mount_height / 2) + shift_adjust, 0], [1]),
+    down_position = kpm * concat(wall_locate2(0, -1) - [0, (mount_height / 2) + shift_adjust, 0], [1]),
+    left_position = kpm *  concat(wall_locate3(-1, 0) + [shift_adjust, 0, 0], [1]),
+    right_position = kpm * concat(wall_locate2(1, 0) + [mount_height/2 + shift_adjust, 0, 0], [1]),
 
     long_result = shift_up ? up_position : (shift_down ? down_position : (shift_left ? left_position : right_position))
   )
