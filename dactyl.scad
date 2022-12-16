@@ -7,7 +7,7 @@ beta = 0.08726638888888888;
 // Column which is considered the middle for curvature purposes
 centercol = 3;
 // Row, counting from the bottom, considered the middle for curvature purposes
-centerrow_offset = 1;
+centerrow_offset = 2;
 // Additonal left-to-right angle of keys
 tenting_angle = 0.42;
 // if nrows > 5, this should warn that we want standard
@@ -168,7 +168,7 @@ module key_place(column, row) {
     multmatrix(key_placement_matrix(column, row, column_style)) children();
 }
 
-// == key holes ==
+// == key holes / top face ==
 
 module single_plate() {
   if (plate_style == "NUB" || plate_style == "HS_NUB") {
@@ -208,9 +208,67 @@ module key_holes() {
   }
 }
 
+module connectors() {
+  // front-to-back gaps between plates
+  for (column = [0 : ncols-2]) {
+    iterrows = (reduced_inner_cols <= column && column < (ncols - reduced_outer_cols-1)) ? lastrow+1 : lastrow;
+    for (row = [0 : iterrows-1]) {
+      hull() { // triangle_hulls()??
+        key_place(column + 1, row) web_post_tl();
+        key_place(column, row) web_post_tr();
+        key_place(column + 1, row) web_post_bl();
+        key_place(column, row) web_post_br();
+      }
+    }
+  }
+
+  // left-to-right gaps between plates
+  for (column = [0 : ncols-1]) {
+    iterrows = (reduced_inner_cols <= column && column < (ncols - reduced_outer_cols)) ? lastrow : cornerrow;
+    for (row = [0 : iterrows - 1]) {
+      hull() { // triangle_hulls()??
+        key_place(column, row) web_post_bl();
+        key_place(column, row) web_post_br();
+        key_place(column, row + 1) web_post_tl();
+        key_place(column, row + 1) web_post_tr();
+      }
+    }
+  }
+
+  // square gaps joining corners of four adjacent plates
+  for (column = [0 : ncols-2]) {
+    iterrows = (reduced_inner_cols <= column && column < (ncols - reduced_outer_cols-1)) ? lastrow : cornerrow;
+    for (row = [0 : iterrows - 1]) {
+      hull() {// triangle_hulls()??
+        key_place(column, row) web_post_br();
+        key_place(column, row + 1) web_post_tr();
+        key_place(column + 1, row) web_post_bl();
+        key_place(column + 1, row + 1) web_post_tl();
+      }
+    }
+    if (column == reduced_inner_cols-1) {
+      hull() {// triangle_hulls()??
+        key_place(column + 1, iterrows) web_post_bl();
+        key_place(column, iterrows) web_post_br();
+        key_place(column + 1, iterrows + 1) web_post_tl();
+        key_place(column + 1, iterrows + 1) web_post_bl();
+      }
+    }
+    if (column == (ncols - reduced_outer_cols - 1)) {
+      hull() {// triangle_hulls()??
+        key_place(column, iterrows) web_post_br();
+        key_place(column + 1, iterrows) web_post_bl();
+        key_place(column, iterrows + 1) web_post_tr();
+        key_place(column, iterrows + 1) web_post_br();
+      }
+    }
+  }
+}
+
 module add_key_holes() {
   children();
   key_holes();
+  connectors();
 }
 
 // == case walls ==
