@@ -240,7 +240,7 @@ module back_wall() {
   key_wall_brace(lastcol, 0, 0, 1, lastcol, 0, 1, 0) { web_post_tr(); web_post_tr(); }
 }
 
-module right_wall() {
+module outer_wall() { // was right_wall
   y = 0;
   corner = reduced_outer_cols > 0 ? cornerrow : lastrow;
   key_wall_brace(lastcol, y, 1, 0, lastcol, y, 1, 0) { web_post_tr(); web_post_br(); }
@@ -251,7 +251,7 @@ module right_wall() {
   key_wall_brace(lastcol, corner, 0, -1, lastcol, corner, 1, 0) { web_post_br(); web_post_br(); }
 }
 
-module left_wall() {
+module inner_wall() { // was left_wall
   wall_brace(
     key_placement_matrix(0, 0), 0, 1,
     left_key_placement_matrix(0, 1), 0, 1
@@ -329,8 +329,8 @@ module front_wall() {
 
 module case_walls() {
   back_wall();
-  left_wall();
-  right_wall();
+  inner_wall();
+  outer_wall();
   front_wall();
 }
 
@@ -351,7 +351,7 @@ function screw_insert_position(column, row) =
     shift_right_adjust = lookup(screws_offsets, screws_offset, 2),
     shift_down_adjust = lookup(screws_offsets, screws_offset, 3),
     shift_up_adjust = lookup(screws_offsets, screws_offset, 4),
-
+    
     up_position = key_placement_matrix(column, row) * concat(wall_locate2(0, 1) + [0, (mount_height / 2) + shift_up_adjust, 0], [1]),
     down_position = key_placement_matrix(column, row) * concat(wall_locate2(0, -1) - [0, (mount_height / 2) + shift_down_adjust, 0], [1]),
     left_position = (left_key_placement_matrix(row, 0) * [0, 0, 0, 1]) + wall_locate3(-1, 0) + [shift_left_adjust, 0, 0],
@@ -359,6 +359,7 @@ function screw_insert_position(column, row) =
 
     long_result = shift_up ? up_position : (shift_down ? down_position : (shift_left ? left_position : right_position))
   )
+  //FIXME: What's the actual height of the top of the plate, to set Z?
   [long_result.x, long_result.y, 0];
 
 all_screw_insert_positions = [
