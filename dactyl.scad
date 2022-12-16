@@ -397,14 +397,19 @@ module screw_insert_holes() {
   }
 }
 
-module model_side() {
+module add_screw_inserts() {
   difference() {
     union() {
-      case_walls();
+      children();
       screw_insert_outers();
     }
     screw_insert_holes();
   }
+}
+
+module model_side() {
+  add_screw_inserts()
+    case_walls();
 }
 
 model_side();
