@@ -444,8 +444,16 @@ module add_controller() {
   }
 }
 
+module cut_off_bottom() {
+  difference() {
+    children();
+    translate([0, 0, -20]) cube([350, 350, 40], center = true);
+  }
+}
+
 module model_side() {
-  add_controller()
+  cut_off_bottom()
+    add_controller()
     add_screw_inserts()
     case_walls();
 }
