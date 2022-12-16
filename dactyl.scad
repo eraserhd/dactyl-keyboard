@@ -62,6 +62,12 @@ wall_base_back_thickness = 4.5;
 screw_insert_height = 3.8;
 screw_insert_outer_radius = 4.25;
 
+controller_mount_type = "EXTERNAL";
+external_holder_height = 12.5;
+external_holder_width = 28.75;
+external_holder_xoffset = -5.0;
+external_holder_yoffset = -4.5;
+
 function deg2rad(d) = d*PI/180;
 function rad2deg(r) = r*180/PI;
 
@@ -333,6 +339,8 @@ module case_walls() {
   front_wall();
 }
 
+// == screw inserts ==
+
 all_screw_insert_positions =
   let (
     screws_offsets = lookup([
@@ -407,8 +415,38 @@ module add_screw_inserts() {
   }
 }
 
+// == controller ==
+
+module external_mount_hole() {
+  external_start =
+    [external_holder_width/2, 0, 0, 0] +
+    (key_placement_matrix(0, 0) * concat((wall_locate3(0, 1) + [0, mount_height/2, 0]), [1]));
+
+  translate([
+    external_start.x + external_holder_xoffset,
+    external_start.y + external_holder_yoffset,
+    external_holder_height / 2 - .05
+  ]) {
+    cube([external_holder_width, 20.0, external_holder_height+0.1], center=true);
+    translate([0, -5, 0])
+      cube([external_holder_width+8, 10.0, external_holder_height+8+0.1], center=true);
+  }
+}
+
+module add_controller() {
+  if (controller_mount_type == "EXTERNAL") {
+    difference() {
+      children();
+      external_mount_hole();
+    }
+  } else {
+    assert(false, str("Unknown controller mount type ", controller_mount_type));
+  }
+}
+
 module model_side() {
-  add_screw_inserts()
+  add_controller()
+    add_screw_inserts()
     case_walls();
 }
 
