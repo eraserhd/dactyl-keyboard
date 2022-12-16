@@ -381,15 +381,30 @@ module screw_insert_outer() {
   translate([0, 0, screw_insert_height / 2]) sphere(r = screw_insert_outer_radius);
 }
 
-module screw_insert_outers(offset=0.0) {
+module screw_insert_outers() {
   for (i = [0 : len(all_screw_insert_positions)-1]) {
     translate(all_screw_insert_positions[i]) screw_insert_outer();
   }
 }
 
+module screw_insert_hole() {
+  translate([0, 0, -1]) cylinder(r = 1.7, h = screw_insert_height + 1, center = true);
+}
+
+module screw_insert_holes() {
+  for (i = [0 : len(all_screw_insert_positions)-1]) {
+    translate(all_screw_insert_positions[i]) screw_insert_hole();
+  }
+}
+
 module model_side() {
-  case_walls();
-  screw_insert_outers();
+  difference() {
+    union() {
+      case_walls();
+      screw_insert_outers();
+    }
+    screw_insert_holes();
+  }
 }
 
 model_side();
