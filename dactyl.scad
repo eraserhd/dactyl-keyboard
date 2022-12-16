@@ -155,7 +155,7 @@ module key_place(column, row) {
 
 module web_post() {
     translate([0, 0, plate_thickness - (web_thickness / 2)])
-        cube([post_size, post_size, web_thickness]);
+        cube([post_size, post_size, web_thickness], center=true);
 }
 
 module web_post_tr() {
@@ -179,11 +179,13 @@ module web_post_br() {
 }
 
 module bottom_hull(height = 0.001) {
-    translate([0, 0, height/2 - 10])
-    linear_extrude(height=height, twist=0, convexity=0, center=true)
-    projection(cut = false)
-    hull()
-    children();
+    hull() {
+      translate([0, 0, height/2 - 10])
+        linear_extrude(height=height, twist=0, convexity=0, center=true)
+        projection(cut = false)
+        children();
+      children();
+    }
 }
 
 function wall_locate1(dx, dy) = [dx * wall_thickness, dy * wall_thickness, -1];
