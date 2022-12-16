@@ -351,11 +351,13 @@ function screw_insert_position(column, row) =
     shift_right_adjust = lookup(screws_offsets, screws_offset, 2),
     shift_down_adjust = lookup(screws_offsets, screws_offset, 3),
     shift_up_adjust = lookup(screws_offsets, screws_offset, 4),
-    
-    up_position = key_placement_matrix(column, row) * concat(wall_locate2(0, 1) + [0, (mount_height / 2) + shift_up_adjust, 0], [1]),
-    down_position = key_placement_matrix(column, row) * concat(wall_locate2(0, -1) - [0, (mount_height / 2) + shift_down_adjust, 0], [1]),
-    left_position = (left_key_placement_matrix(row, 0) * [0, 0, 0, 1]) + wall_locate3(-1, 0) + [shift_left_adjust, 0, 0],
-    right_position = key_placement_matrix(column, row) * concat(wall_locate2(1, 0) + [mount_height/2, 0, 0] + [shift_right_adjust, 0, 0], [1]),
+
+    kpm = shift_left ? left_key_placement_matrix(row, 0) : key_placement_matrix(column, row),
+
+    up_position = kpm * concat(wall_locate2(0, 1) + [0, (mount_height / 2) + shift_up_adjust, 0], [1]),
+    down_position = kpm * concat(wall_locate2(0, -1) - [0, (mount_height / 2) + shift_down_adjust, 0], [1]),
+    left_position = kpm *  concat(wall_locate3(-1, 0) + [shift_left_adjust, 0, 0], [1]),
+    right_position = kpm * concat(wall_locate2(1, 0) + [mount_height/2 + shift_right_adjust, 0, 0], [1]),
 
     long_result = shift_up ? up_position : (shift_down ? down_position : (shift_left ? left_position : right_position))
   )
