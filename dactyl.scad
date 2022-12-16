@@ -335,57 +335,45 @@ module case_walls() {
 
 all_screw_insert_positions =
   let (
-    screws_offsets = [
-      ["INSIDE",   wall_base_x_thickness, -wall_base_x_thickness/2, -wall_base_y_thickness/2,  -wall_base_y_thickness/3],
-      ["OUTSIDE",  0,                     wall_base_x_thickness/2,  wall_base_y_thickness*2/3, wall_base_y_thickness*2/3],
-      ["ORIGINAL", 0,                     0,                        0,                         0]
-    ],
+    screws_offsets = lookup([
+      [
+        "INSIDE",
+        wall_locate3(-1, 0) + [wall_base_x_thickness, 0, 0],
+        wall_locate2(1, 0) + [mount_height/2 + -wall_base_x_thickness/2, 0, 0],
+        wall_locate2(0, -1) - [0, (mount_height / 2) + -wall_base_y_thickness/2, 0],
+        wall_locate2(0, 1) + [0, (mount_height / 2) + -wall_base_y_thickness/3, 0]
+      ],
+      [
+        "OUTSIDE",
+        wall_locate3(-1, 0),
+        wall_locate2(1, 0) + [mount_height/2 + wall_base_x_thickness/2, 0, 0],
+        wall_locate2(0, -1) - [0, (mount_height / 2) + wall_base_y_thickness*2/3, 0],
+        wall_locate2(0, 1) + [0, (mount_height / 2) + wall_base_y_thickness*2/3, 0]
+      ],
+      [
+        "ORIGINAL",
+        wall_locate3(-1, 0),
+        wall_locate2(1, 0) + [mount_height/2, 0, 0],
+        wall_locate2(0, -1) - [0, mount_height / 2, 0],
+        wall_locate2(0, 1) + [0, (mount_height / 2), 0]
+      ]
+    ], screws_offset),
 
     //FIXME: What's the actual height of the top of the plate, to set Z?
     screw_insert_z = 0,
+    set_z = function(pos) [pos.x, pos.y, screw_insert_z],
 
-    inner_edge_position = function(row)
-      let(
-        direction = 1,
-        shift_adjust = lookup(screws_offsets, screws_offset, direction),
-        kpm = left_key_placement_matrix(row, 0),
-        long_result = kpm * concat(wall_locate3(-1, 0) + [shift_adjust, 0, 0], [1])
-      )
-      [long_result.x, long_result.y, screw_insert_z],
-
-    outer_edge_position = function(column, row)
-      let(
-        direction = 2,
-        shift_adjust = lookup(screws_offsets, screws_offset, direction),
-        kpm = key_placement_matrix(column, row),
-        long_result = kpm * concat(wall_locate2(1, 0) + [mount_height/2 + shift_adjust, 0, 0], [1])
-      )
-      [long_result.x, long_result.y, screw_insert_z],
-
-    front_edge_position = function(column, row)
-      let(
-        direction = 3,
-        shift_adjust = lookup(screws_offsets, screws_offset, direction),
-        kpm = key_placement_matrix(column, row),
-        long_result = kpm * concat(wall_locate2(0, -1) - [0, (mount_height / 2) + shift_adjust, 0], [1])
-      )
-      [long_result.x, long_result.y, screw_insert_z],
-
-    back_edge_position = function(column, row)
-      let(
-        direction = 4,
-        shift_adjust = lookup(screws_offsets, screws_offset, direction),
-        kpm = key_placement_matrix(column, row),
-        long_result = kpm * concat(wall_locate2(0, 1) + [0, (mount_height / 2) + shift_adjust, 0], [1])
-      )
-      [long_result.x, long_result.y, screw_insert_z]
+    inner_wall_position = function(row)         set_z(left_key_placement_matrix(row, 0) * concat(screws_offsets[1], [1])),
+    outer_wall_position = function(column, row) set_z(key_placement_matrix(column, row) * concat(screws_offsets[2], [1])),
+    front_wall_position = function(column, row) set_z(key_placement_matrix(column, row) * concat(screws_offsets[3], [1])),
+    back_wall_position  = function(column, row) set_z(key_placement_matrix(column, row) * concat(screws_offsets[4], [1]))
   ) [
-    inner_edge_position(0),
-    inner_edge_position(cornerrow),
-    front_edge_position(3, lastrow),
-    back_edge_position(3, 0),
-    outer_edge_position(lastcol, 0),
-    outer_edge_position(lastcol, cornerrow)
+    inner_wall_position(0),
+    inner_wall_position(cornerrow),
+    front_wall_position(3, lastrow),
+    back_wall_position(3, 0),
+    outer_wall_position(lastcol, 0),
+    outer_wall_position(lastcol, cornerrow)
   ];
 
 module screw_insert_outer() {
