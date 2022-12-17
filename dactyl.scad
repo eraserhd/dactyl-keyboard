@@ -1,7 +1,12 @@
-// Number of non-thumb rows (some might be short because of reduced_inner_cols and reduced_outer_cols)
-nrows = 3;
+// Number of non-thumb rows
+Rows = 3;
 // Number of non-thumb columns
-ncols = 6;
+Columns = 6;
+// Remove this many keys from the inside of the bottom row
+reduced_inner_cols = 0;
+// Remove this many kkeys from the outside of the bottom row
+reduced_outer_cols = 0;
+
 alpha = 0.26179916666666664;
 beta = 0.08726638888888888;
 // Column which is considered the middle for curvature purposes
@@ -10,25 +15,14 @@ centercol = 3;
 centerrow_offset = 2;
 // Additonal left-to-right angle of keys
 tenting_angle = 0.42;
-// if nrows > 5, this should warn that we want standard
-column_style = "orthographic"; // orthographic, fixed, standard
-reduced_inner_cols = 0;
-reduced_outer_cols = 0;
-//thumb_offsets = [6, -3, 7];
+// if Rows > 5, this should warn that we want standard
+column_style = "ORTHOGRAPHIC"; // [ORTHOGRAPHIC]
 keyboard_z_offset = 20;
 extra_width = 2.5;
 extra_height = 1.0;
 web_thickness = 5.1;
 post_size = 0.1;
 post_adj = 0;
-//thumb_style = "TRACKBALL_CJ";
-
-plate_thickness = 5.1;
-plate_rim = 2.0;
-clip_thickness = 1.1;
-clip_undercut = 1.0;
-
-plate_style = "NOTCH";
 
 sa_profile_key_height = 12.7;
 sa_length = 18.5;
@@ -40,9 +34,6 @@ nub_keyswitch_width = 14.4;
 undercut_keyswitch_height = 14.0;
 undercut_keyswitch_width = 14.0;
 notch_width = 6.0;
-
-// Position of screw inserts, relative to the case walls.
-screw_offset_type = "INTERIOR"; // [INTERIOR, EXTERIOR, ORIGINAL]
 
 column_offsets = [
     [ 0, 0, 0 ],
@@ -63,6 +54,13 @@ wall_base_y_thickness = 4.5;
 wall_base_x_thickness = 4.5;
 wall_base_back_thickness = 4.5;
 
+/* [Keywells] */
+
+// How keyswitches are mounted.
+plate_style = "NOTCH"; // [HOLE, NUB, HS_NUB, UNDERCUT, HS_UNDERCUT, NOTCH, HS_NOTCH]
+
+plate_thickness = 5.1;
+plate_rim = 2.0;
 plate_holes = true;
 plate_holes_xy_offset = [ 0.0, 0.0 ];
 plate_holes_width = 14.3;
@@ -70,10 +68,19 @@ plate_holes_height = 14.3;
 plate_holes_diameter = 1.6;
 plate_holes_depth = 20.0;
 
+clip_thickness = 1.1;
+clip_undercut = 1.0;
+
+/* [Bottom Plate Screws] */
+
+// Position of screw inserts, relative to the case walls.
+screw_offset_type = "INTERIOR"; // [INTERIOR, EXTERIOR, ORIGINAL]
+
 screw_insert_height = 3.8;
 screw_insert_outer_radius = 4.25;
 
-controller_mount_type = "EXTERNAL";
+/* [Controller Mounting] */
+controller_mount_type = "EXTERNAL"; // [EXTERNAL]
 external_holder_height = 12.5;
 external_holder_width = 28.75;
 external_holder_xoffset = -5.0;
@@ -107,10 +114,10 @@ mount_width = keyswitch_width + 2 * plate_rim;
 mount_height = keyswitch_height + 2 * plate_rim;
 mount_thickness = plate_thickness;
 
-centerrow = nrows - centerrow_offset;
-lastrow = nrows - 1;
+centerrow = Rows - centerrow_offset;
+lastrow = Rows - 1;
 cornerrow = (reduced_outer_cols>0 || reduced_inner_cols>0) ? lastrow - 1 : lastrow;
-lastcol = ncols - 1;
+lastcol = Columns - 1;
 
 cap_top_height = plate_thickness + sa_profile_key_height;
 row_radius = ((mount_height + extra_height) / 2) / (sin(rad2deg(alpha / 2))) + cap_top_height;
@@ -137,26 +144,27 @@ function rotate_y_matrix(rad) =
      [sin(deg), 0,  cos(deg), 0],
      [       0, 0,         0, 1]];
 
-column_styles = [
-  ["orthographic",
-   function(column, row)
-     let(
-         column_angle = beta * (centercol - column),
-         column_z_delta = column_radius * (1 - cos(rad2deg(column_angle)))
-     )
-     translate_matrix([0, 0, keyboard_z_offset]) *
-     rotate_y_matrix(tenting_angle) *
-     translate_matrix(column_offsets[column]) *
-     translate_matrix([-(column - centercol) * column_x_delta, 0, column_z_delta]) *
-     rotate_y_matrix(column_angle) *
-     translate_matrix([0, 0, row_radius]) *
-     rotate_x_matrix(alpha * (centerrow - row)) *
-     translate_matrix([0, 0, -row_radius])
-   ]
-];
-
 function key_placement_matrix(column, row, column_style=column_style) =
-    let (placement_fn = lookup(column_styles, column_style, 1))
+    let (
+      column_styles = [
+        ["ORTHOGRAPHIC",
+         function(column, row)
+           let(
+               column_angle = beta * (centercol - column),
+               column_z_delta = column_radius * (1 - cos(rad2deg(column_angle)))
+           )
+           translate_matrix([0, 0, keyboard_z_offset]) *
+           rotate_y_matrix(tenting_angle) *
+           translate_matrix(column_offsets[column]) *
+           translate_matrix([-(column - centercol) * column_x_delta, 0, column_z_delta]) *
+           rotate_y_matrix(column_angle) *
+           translate_matrix([0, 0, row_radius]) *
+           rotate_x_matrix(alpha * (centerrow - row)) *
+           translate_matrix([0, 0, -row_radius])
+         ]
+      ],
+      placement_fn = lookup(column_styles, column_style, 1)
+    )
     placement_fn(column, row);
 
 function left_key_placement_matrix(row, direction) =
@@ -202,8 +210,8 @@ module single_plate() {
 }
 
 module key_holes() {
-  for (column = [0 : ncols-1], row = [0 : nrows-1]) {
-    if ((reduced_inner_cols <= column && column < (ncols - reduced_outer_cols)) || row != lastrow) {
+  for (column = [0 : Columns-1], row = [0 : Rows-1]) {
+    if ((reduced_inner_cols <= column && column < (Columns - reduced_outer_cols)) || row != lastrow) {
       key_place(column, row) single_plate();
     }
   }
@@ -211,8 +219,8 @@ module key_holes() {
 
 module connectors() {
   // front-to-back gaps between plates
-  for (column = [0 : ncols-2]) {
-    iterrows = (reduced_inner_cols <= column && column < (ncols - reduced_outer_cols-1)) ? lastrow+1 : lastrow;
+  for (column = [0 : Columns-2]) {
+    iterrows = (reduced_inner_cols <= column && column < (Columns - reduced_outer_cols-1)) ? lastrow+1 : lastrow;
     for (row = [0 : iterrows-1]) {
       hull() { // triangle_hulls()??
         key_place(column + 1, row) web_post_tl();
@@ -224,8 +232,8 @@ module connectors() {
   }
 
   // left-to-right gaps between plates
-  for (column = [0 : ncols-1]) {
-    iterrows = (reduced_inner_cols <= column && column < (ncols - reduced_outer_cols)) ? lastrow : cornerrow;
+  for (column = [0 : Columns-1]) {
+    iterrows = (reduced_inner_cols <= column && column < (Columns - reduced_outer_cols)) ? lastrow : cornerrow;
     for (row = [0 : iterrows - 1]) {
       hull() { // triangle_hulls()??
         key_place(column, row) web_post_bl();
@@ -237,8 +245,8 @@ module connectors() {
   }
 
   // square gaps joining corners of four adjacent plates
-  for (column = [0 : ncols-2]) {
-    iterrows = (reduced_inner_cols <= column && column < (ncols - reduced_outer_cols-1)) ? lastrow : cornerrow;
+  for (column = [0 : Columns-2]) {
+    iterrows = (reduced_inner_cols <= column && column < (Columns - reduced_outer_cols-1)) ? lastrow : cornerrow;
     for (row = [0 : iterrows - 1]) {
       hull() {// triangle_hulls()??
         key_place(column, row) web_post_br();
@@ -255,7 +263,7 @@ module connectors() {
         key_place(column + 1, iterrows + 1) web_post_bl();
       }
     }
-    if (column == (ncols - reduced_outer_cols - 1)) {
+    if (column == (Columns - reduced_outer_cols - 1)) {
       hull() {// triangle_hulls()??
         key_place(column, iterrows) web_post_br();
         key_place(column + 1, iterrows) web_post_bl();
@@ -353,7 +361,7 @@ module key_wall_brace(x1, y1, dx1, dy1, x2, y2, dx2, dy2, back=false) {
 module back_wall() {
   x = 0;
   key_wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
-  for (x = [1 : ncols - 1]) {
+  for (x = [1 : Columns - 1]) {
     key_wall_brace(x, 0, 0, 1, x, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
     key_wall_brace(x, 0, 0, 1, x - 1, 0, 0, 1, back=true) { web_post_tl(); web_post_tr(); }
   }
@@ -422,9 +430,9 @@ module inner_wall() { // was left_wall
 
 module front_wall() {
   corner = cornerrow;
-  offset_col = reduced_outer_cols > 0 ? ncols - reduced_outer_cols : 99;
+  offset_col = reduced_outer_cols > 0 ? Columns - reduced_outer_cols : 99;
 
-  for (x = [3 : ncols - 1]) {
+  for (x = [3 : Columns - 1]) {
     if (x < (offset_col - 1)) {
       if (x > 3) {
         key_wall_brace(x-1, lastrow, 0, -1, x, lastrow, 0, -1) { web_post_br(); web_post_bl(); }
