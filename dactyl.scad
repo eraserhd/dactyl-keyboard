@@ -41,7 +41,8 @@ undercut_keyswitch_height = 14.0;
 undercut_keyswitch_width = 14.0;
 notch_width = 6.0;
 
-screws_offset = "INSIDE";
+// Position of screw inserts, relative to the case walls.
+screw_offset_type = "INTERIOR"; // [INTERIOR, EXTERIOR, ORIGINAL]
 
 column_offsets = [
     [ 0, 0, 0 ],
@@ -458,16 +459,16 @@ module case_walls() {
 
 all_screw_insert_positions =
   let (
-    screws_offsets = lookup([
+    offsets = lookup([
       [
-        "INSIDE",
+        "INTERIOR",
         wall_locate3(-1, 0) + [wall_base_x_thickness, 0, 0],
         wall_locate2(1, 0) + [mount_height/2 + -wall_base_x_thickness/2, 0, 0],
         wall_locate2(0, -1) - [0, (mount_height / 2) + -wall_base_y_thickness/2, 0],
         wall_locate2(0, 1) + [0, (mount_height / 2) + -wall_base_y_thickness/3, 0]
       ],
       [
-        "OUTSIDE",
+        "EXTERIOR",
         wall_locate3(-1, 0),
         wall_locate2(1, 0) + [mount_height/2 + wall_base_x_thickness/2, 0, 0],
         wall_locate2(0, -1) - [0, (mount_height / 2) + wall_base_y_thickness*2/3, 0],
@@ -480,16 +481,16 @@ all_screw_insert_positions =
         wall_locate2(0, -1) - [0, mount_height / 2, 0],
         wall_locate2(0, 1) + [0, (mount_height / 2), 0]
       ]
-    ], screws_offset),
+    ], screw_offset_type),
 
     //FIXME: What's the actual height of the top of the plate, to set Z?
     screw_insert_z = 0,
     set_z = function(pos) [pos.x, pos.y, screw_insert_z],
 
-    inner_wall_position = function(row)         set_z(left_key_placement_matrix(row, 0) * concat(screws_offsets[1], [1])),
-    outer_wall_position = function(column, row) set_z(key_placement_matrix(column, row) * concat(screws_offsets[2], [1])),
-    front_wall_position = function(column, row) set_z(key_placement_matrix(column, row) * concat(screws_offsets[3], [1])),
-    back_wall_position  = function(column, row) set_z(key_placement_matrix(column, row) * concat(screws_offsets[4], [1]))
+    inner_wall_position = function(row)         set_z(left_key_placement_matrix(row, 0) * concat(offsets[1], [1])),
+    outer_wall_position = function(column, row) set_z(key_placement_matrix(column, row) * concat(offsets[2], [1])),
+    front_wall_position = function(column, row) set_z(key_placement_matrix(column, row) * concat(offsets[3], [1])),
+    back_wall_position  = function(column, row) set_z(key_placement_matrix(column, row) * concat(offsets[4], [1]))
   ) [
     inner_wall_position(0),
     inner_wall_position(cornerrow),
