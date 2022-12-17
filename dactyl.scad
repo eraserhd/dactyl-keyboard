@@ -82,6 +82,9 @@ screw_insert_outer_radius = 4.25;
 /* [Display] */
 
 oled_mount_type = "CLIP"; // [UNDERCUT, SLIDING, CLIP]
+oled_center_row = 1.25;
+oled_translation_offset = [0, 0, 4];
+oled_rotation_offset = [0, 0, 0];
 
 /* [Controller Mounting] */
 
@@ -124,14 +127,30 @@ mount_thickness = plate_thickness;
 oled_configurations = [
   ["CLIP",
    function(name)
+     let (
+       left_wall_x_offset = 24.0,
+       
+       fix_point = function(p) [p.x, p.y, p.z],
+       
+       base_pt1 = fix_point(key_placement_matrix(0, oled_center_row-1) * [-mount_width/2, mount_height/2, 0, 1]),
+       base_pt2 = fix_point(key_placement_matrix(0, oled_center_row+1) * [-mount_width/2, mount_height/2, 0, 1]),
+       base_pt0 = fix_point(key_placement_matrix(0, oled_center_row)   * [-mount_width/2, mount_height/2, 0, 1]),
+       
+       mount_location_part = (base_pt1 + base_pt2)/2 + [-left_wall_x_offset/2, 0, 0] + oled_translation_offset,
+       mount_location_xyz = [mount_location_part.x, mount_location_part.y, (mount_location_part.z + base_pt0[2])/2],
+       
+       angle_x = atan2(base_pt1[2] - base_pt2[2], base_pt1[1] - base_pt2[1]),
+       angle_z = atan2(base_pt1[0] - base_pt2[0], base_pt1[1] - base_pt2[1]),
+       mount_rotation_xyz = [angle_x, 0, -angle_z] + oled_rotation_offset
+     )
      name == "mount_width" ? 12.5 :
      name == "mount_height" ? 39.0 :
      name == "mount_rim" ? 2.0 :
      name == "mount_depth" ? 7.0 :
      name == "mount_cut_depth" ? 20.0 :
-     name == "mount_location_xyz" ? [ -78.0, 20.0, 42.0 ] :
-     name == "mount_rotation_xyz" ? [ 12.0, 0.0, -6.0 ] :
-     name == "left_wall_x_offset" ? 24.0 :
+     name == "mount_location_xyz" ? mount_location_xyz : //[ -78.0, 20.0, 42.0 ]
+     name == "mount_rotation_xyz" ? mount_rotation_xyz : //[ 12.0, 0.0, -6.0 ] :
+     name == "left_wall_x_offset" ? left_wall_x_offset :
      name == "left_wall_z_offset" ? 0.0 :
      name == "left_wall_lower_y_offset" ? 12.0 :
      name == "left_wall_lower_z_offset" ? 5.0 :
@@ -209,7 +228,7 @@ function key_placement_matrix(column, row, column_style=column_style) =
     )
     placement_fn(column, row);
 
-function left_key_placement_matrix(row, direction) =
+function inner_wall_placement_matrix(row, direction) =
     let (
       pos = key_placement_matrix(0, row) * [-mount_width * 0.5, direction * mount_height * 0.5, 0, 1]
     )
@@ -425,14 +444,14 @@ module outer_wall() { // was right_wall
 module inner_wall() { // was left_wall
   wall_brace(
     key_placement_matrix(0, 0), 0, 1,
-    left_key_placement_matrix(0, 1), 0, 1
+    inner_wall_placement_matrix(0, 1), 0, 1
   ) {
     web_post_tl();
     web_post();
   }
   wall_brace(
-    left_key_placement_matrix(0, 1), 0, 1,
-    left_key_placement_matrix(0, 1), -1, 0
+    inner_wall_placement_matrix(0, 1), 0, 1,
+    inner_wall_placement_matrix(0, 1), -1, 0
   ) {
     web_post();
     web_post();
@@ -440,8 +459,8 @@ module inner_wall() { // was left_wall
   corner = reduced_inner_cols > 0 ? cornerrow : lastrow;
   for (y = [0 : corner]) {
     wall_brace(
-      left_key_placement_matrix(y, 1), -1, 0,
-      left_key_placement_matrix(y, -1), -1, 0
+      inner_wall_placement_matrix(y, 1), -1, 0,
+      inner_wall_placement_matrix(y, -1), -1, 0
     ) {
       web_post();
       web_post();
@@ -449,14 +468,14 @@ module inner_wall() { // was left_wall
     hull() {
       key_place(0, y) web_post_tl();
       key_place(0, y) web_post_bl();
-      multmatrix(left_key_placement_matrix(y, 1)) web_post();
-      multmatrix(left_key_placement_matrix(y, -1)) web_post();
+      multmatrix(inner_wall_placement_matrix(y, 1)) web_post();
+      multmatrix(inner_wall_placement_matrix(y, -1)) web_post();
     }
   }
   for (y = [1 : corner]) {
     wall_brace(
-      left_key_placement_matrix(y - 1, -1), -1, 0,
-      left_key_placement_matrix(y, 1), -1, 0
+      inner_wall_placement_matrix(y - 1, -1), -1, 0,
+      inner_wall_placement_matrix(y, 1), -1, 0
     ) {
       web_post();
       web_post();
@@ -464,8 +483,8 @@ module inner_wall() { // was left_wall
     hull() {
       key_place(0, y) web_post_tl();
       key_place(0, y-1) web_post_bl();
-      multmatrix(left_key_placement_matrix(y, 1)) web_post();
-      multmatrix(left_key_placement_matrix(y-1, -1)) web_post();
+      multmatrix(inner_wall_placement_matrix(y, 1)) web_post();
+      multmatrix(inner_wall_placement_matrix(y-1, -1)) web_post();
     }
   }
 }
@@ -537,7 +556,7 @@ all_screw_insert_positions =
     screw_insert_z = 0,
     set_z = function(pos) [pos.x, pos.y, screw_insert_z],
 
-    inner_wall_position = function(row)         set_z(left_key_placement_matrix(row, 0) * concat(offsets[1], [1])),
+    inner_wall_position = function(row)         set_z(inner_wall_placement_matrix(row, 0) * concat(offsets[1], [1])),
     outer_wall_position = function(column, row) set_z(key_placement_matrix(column, row) * concat(offsets[2], [1])),
     front_wall_position = function(column, row) set_z(key_placement_matrix(column, row) * concat(offsets[3], [1])),
     back_wall_position  = function(column, row) set_z(key_placement_matrix(column, row) * concat(offsets[4], [1]))
@@ -613,10 +632,15 @@ module add_controller() {
 // == OLED ==
 
 module add_oled_clip_mount() {
-  //mount_ext_width = oled_mount_width + 2 * oled_mount_rim;
-  //mount_ext_height = oled_mount_height + 2 * oled_clip_thickness
-  //        + 2 * oled_clip_undercut + 2 * oled_clip_overhang + 2 * oled_mount_rim;
-  children();
+  mount_ext_width = oled("mount_width") + 2 * oled("mount_rim");
+  mount_ext_height = oled("mount_height") + 2 * oled("clip_thickness")
+          + 2 * oled("clip_undercut") + 2 * oled("clip_overhang") + 2 * oled("mount_rim");
+  difference() {
+    children();
+    translate(oled("mount_location_xyz"))
+      rotate(oled("mount_rotation_xyz"))
+        cube([mount_ext_width, mount_ext_height, oled("mount_cut_depth") + 0.01], center=true);
+  }
 }
 
 module add_oled() {
