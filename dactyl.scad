@@ -27,14 +27,6 @@ post_adj = 0;
 sa_profile_key_height = 12.7;
 sa_length = 18.5;
 
-hole_keyswitch_height = 14.0;
-hole_keyswitch_width = 14.0;
-nub_keyswitch_height = 14.4;
-nub_keyswitch_width = 14.4;
-undercut_keyswitch_height = 14.0;
-undercut_keyswitch_width = 14.0;
-notch_width = 6.0;
-
 column_offsets = [
     [ 0, 0, 0 ],
     [ 0, 0, 0 ],
@@ -68,6 +60,14 @@ plate_holes_height = 14.3;
 plate_holes_diameter = 1.6;
 plate_holes_depth = 20.0;
 
+hole_keyswitch_height = 14.0;
+hole_keyswitch_width = 14.0;
+nub_keyswitch_height = 14.4;
+nub_keyswitch_width = 14.4;
+undercut_keyswitch_height = 14.0;
+undercut_keyswitch_width = 14.0;
+notch_width = 6.0;
+
 clip_thickness = 1.1;
 clip_undercut = 1.0;
 
@@ -79,12 +79,19 @@ screw_offset_type = "INTERIOR"; // [INTERIOR, EXTERIOR, ORIGINAL]
 screw_insert_height = 3.8;
 screw_insert_outer_radius = 4.25;
 
+/* [Display] */
+
+oled_mount_type = "CLIP"; // [UNDERCUT, SLIDING, CLIP]
+
 /* [Controller Mounting] */
+
 controller_mount_type = "EXTERNAL"; // [EXTERNAL]
 external_holder_height = 12.5;
 external_holder_width = 28.75;
 external_holder_xoffset = -5.0;
 external_holder_yoffset = -4.5;
+
+// =========================================================================================================
 
 function deg2rad(d) = d*PI/180;
 function rad2deg(r) = r*180/PI;
@@ -113,6 +120,41 @@ keyswitch_width = lookup(plate_styles, plate_style, 2);
 mount_width = keyswitch_width + 2 * plate_rim;
 mount_height = keyswitch_height + 2 * plate_rim;
 mount_thickness = plate_thickness;
+
+oled_configurations = [
+  ["CLIP",
+   function(name)
+     name == "mount_width" ? 12.5 :
+     name == "mount_height" ? 39.0 :
+     name == "mount_rim" ? 2.0 :
+     name == "mount_depth" ? 7.0 :
+     name == "mount_cut_depth" ? 20.0 :
+     name == "mount_location_xyz" ? [ -78.0, 20.0, 42.0 ] :
+     name == "mount_rotation_xyz" ? [ 12.0, 0.0, -6.0 ] :
+     name == "left_wall_x_offset" ? 24.0 :
+     name == "left_wall_z_offset" ? 0.0 :
+     name == "left_wall_lower_y_offset" ? 12.0 :
+     name == "left_wall_lower_z_offset" ? 5.0 :
+     name == "thickness" ? 4.2 :
+     name == "mount_bezel_thickness" ? 3.5 :
+     name == "mount_bezel_chamfer" ? 2.0 :
+     name == "mount_connector_hole" ? 6.0 :
+     name == "screen_start_from_conn_end" ? 6.5 :
+     name == "screen_length" ? 24.5 :
+     name == "screen_width" ? 10.5 :
+     name == "clip_thickness" ? 1.5 :
+     name == "clip_width" ? 6.0 :
+     name == "clip_overhang" ? 1.0 :
+     name == "clip_extension" ? 5.0 :
+     name == "clip_width_clearance" ? 0.5 :
+     name == "clip_undercut" ? 0.5 :
+     name == "clip_undercut_thickness" ? 2.5 :
+     name == "clip_y_gap" ? 0.2 :
+     name == "clip_z_gap" ? 0.2 :
+     assert(false, str("Unknown name ", name))]
+];
+
+oled = lookup(oled_configurations, oled_mount_type, 1);
 
 centerrow = Rows - centerrow_offset;
 lastrow = Rows - 1;
@@ -171,7 +213,7 @@ function left_key_placement_matrix(row, direction) =
     let (
       pos = key_placement_matrix(0, row) * [-mount_width * 0.5, direction * mount_height * 0.5, 0, 1]
     )
-    translate_matrix([ pos.x, pos.y, pos.z ]);
+    translate_matrix([ pos.x, pos.y, pos.z ] - [oled("left_wall_x_offset"), 0, oled("left_wall_z_offset")]);
 
 module key_place(column, row) {
     multmatrix(key_placement_matrix(column, row, column_style)) children();
@@ -568,6 +610,22 @@ module add_controller() {
   }
 }
 
+// == OLED ==
+
+module add_oled_clip_mount() {
+  //mount_ext_width = oled_mount_width + 2 * oled_mount_rim;
+  //mount_ext_height = oled_mount_height + 2 * oled_clip_thickness
+  //        + 2 * oled_clip_undercut + 2 * oled_clip_overhang + 2 * oled_mount_rim;
+  children();
+}
+
+module add_oled() {
+  add_oled_clip_mount() children();
+  assert(oled_mount_type == "CLIP", "Only CLIP is supported currently.");
+}
+
+// == model ==
+
 module cut_off_bottom() {
   difference() {
     children();
@@ -579,6 +637,7 @@ module model_side() {
   cut_off_bottom()
     add_controller()
     add_key_holes()
+    add_oled()
     add_screw_inserts()
     case_walls();
 }
