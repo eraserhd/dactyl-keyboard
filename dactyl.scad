@@ -635,11 +635,59 @@ module add_oled_clip_mount() {
   mount_ext_width = oled("mount_width") + 2 * oled("mount_rim");
   mount_ext_height = oled("mount_height") + 2 * oled("clip_thickness")
           + 2 * oled("clip_undercut") + 2 * oled("clip_overhang") + 2 * oled("mount_rim");
-  difference() {
-    children();
+  
+  module place_oled() {
     translate(oled("mount_location_xyz"))
       rotate(oled("mount_rotation_xyz"))
-        cube([mount_ext_width, mount_ext_height, oled("mount_cut_depth") + 0.01], center=true);
+        children();
+  }
+  module hole() {
+    place_oled() cube([mount_ext_width, mount_ext_height, oled("mount_cut_depth") + 0.01], center=true);
+  }
+  module clip_undercut() {
+    translate([0, 0, oled("clip_undercut_thickness")])
+      cube([
+        oled("clip_width") + 2 * oled("clip_width_clearance"),
+        oled("mount_height") + 2 * oled("clip_thickness") + 2 * oled("clip_overhang") + 2 * oled("clip_undercut"),
+        oled("mount_depth") + 0.1
+      ], center=true);
+  }
+  module plate() {
+    translate([0, 0, -oled("thickness")/2])
+      cube([
+        oled("mount_width") + .1,
+        oled("mount_height") - 2 * oled("mount_connector_hole"),
+        oled("mount_depth") - oled("thickness")
+      ], center=true);
+  }
+  module clip_slot() {
+    cube([
+      oled("clip_width") + 2 * oled("clip_width_clearance"),
+      oled("mount_height") + 2 * oled("clip_thickness") + 2 * oled("clip_overhang"),
+      oled("mount_depth") + .1
+    ], center=true);
+  }
+
+  difference() {
+    children();
+    hole();
+  }
+  place_oled() {
+    difference() {
+      cube([
+        mount_ext_width,
+        mount_ext_height,
+        oled("mount_depth")
+      ], center=true);
+      cube([
+        oled("mount_width"),
+        oled("mount_height"),
+        oled("mount_depth") + 0.1
+      ], center=true);
+      clip_slot();
+      clip_undercut();
+    }
+    plate();
   }
 }
 
