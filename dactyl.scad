@@ -571,35 +571,30 @@ module add_thumb_cluster() {
   holder_origin = [-15, -60, -12] + origin;
 
   // Matrices for the four thumb keys, inside to outside
-  bl_matrix =
-    translate_matrix([-56.3, -43.3, -23.5]) *
-    translate_matrix(origin) *
-    rotate_matrix([deg2rad(-4), deg2rad(-35), deg2rad(52)]);
-  ml_matrix =
-    translate_matrix([-51, -25, -12]) *
-    translate_matrix(origin) *
-    rotate_matrix([deg2rad(6), deg2rad(-34), deg2rad(40)]);
-  tl_matrix =
-    translate_matrix([-32.5, -14.5, -2.5]) *
-    translate_matrix(origin) *
-    rotate_matrix([deg2rad(7.5), deg2rad(-18), deg2rad(10)]);
-  tr_matrix =
-    translate_matrix([-12, -16, 3]) *
-    translate_matrix(origin) *
-    rotate_matrix([deg2rad(10), deg2rad(-15), deg2rad(10)]);
-
+  thumb_keys = [
+    translate_matrix([-56.3, -43.3, -23.5] + origin) * rotate_matrix([deg2rad(-4), deg2rad(-35), deg2rad(52)]),
+    translate_matrix([-51, -25, -12] + origin) * rotate_matrix([deg2rad(6), deg2rad(-34), deg2rad(40)]),
+    translate_matrix([-32.5, -14.5, -2.5] + origin) * rotate_matrix([deg2rad(7.5), deg2rad(-18), deg2rad(10)]),
+    translate_matrix([-12, -16, 3] + origin) * rotate_matrix([deg2rad(10), deg2rad(-15), deg2rad(10)])
+  ];
+  module place_thumbkey(i) {
+    multmatrix(thumb_keys[i]) children();
+  }
+  
+  ml_matrix = translate_matrix([-51, -25, -12] + origin) * rotate_matrix([deg2rad(6), deg2rad(-34), deg2rad(40)]);
   module tbcj_thumb_bl_place() {
-    multmatrix(bl_matrix) children();
+    place_thumbkey(0) children();
   }
   module tbcj_thumb_ml_place() {
-    multmatrix(ml_matrix) children();
+    place_thumbkey(1) children();
   }
   module tbcj_thumb_tl_place() {
-    multmatrix(tl_matrix) children();
+    place_thumbkey(2) children();
   }
   module tbcj_thumb_tr_place() {
-    multmatrix(tr_matrix) children();
+    place_thumbkey(3) children();
   }
+  
   module tbcj_thumb_layout() {
     tbcj_thumb_tr_place() rotate([0, 0, thumb_plate_tr_rotation]) children();
     tbcj_thumb_tl_place() rotate([0, 0, thumb_plate_tl_rotation]) children();
@@ -742,19 +737,19 @@ module add_thumb_cluster() {
        web_post_tr();
        web_post_tl();
     }
-    wall_brace(bl_matrix, 0, 1, bl_matrix, 0, 1) {
+    wall_brace(thumb_keys[0], 0, 1, thumb_keys[0], 0, 1) {
        web_post_tr();
        web_post_tl();
     }
-    wall_brace(bl_matrix, -1, 0, bl_matrix, -1, 0) {
+    wall_brace(thumb_keys[0], -1, 0, thumb_keys[0], -1, 0) {
        web_post_tl();
        web_post_bl();
     }
-    wall_brace(bl_matrix, -1, 0, bl_matrix, 0, 1) {
+    wall_brace(thumb_keys[0], -1, 0, thumb_keys[0], 0, 1) {
        web_post_tl();
        web_post_tl();
     }
-    wall_brace(ml_matrix, 0, 1, bl_matrix, 0, 1) {
+    wall_brace(ml_matrix, 0, 1, thumb_keys[0], 0, 1) {
       web_post_tl();
       web_post_tr();
     }
@@ -769,7 +764,7 @@ module add_thumb_cluster() {
     }
     
     make_walls([
-      [bl_matrix, -1, 0],
+      [thumb_keys[0], -1, 0],
       [translate_matrix(holder_origin), 0, -1],
       [translate_matrix(holder_origin), 0, -1],
       [translate_matrix(holder_origin), 0, -1],
