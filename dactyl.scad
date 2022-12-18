@@ -112,6 +112,27 @@ external_holder_yoffset = -4.5;
 function deg2rad(d) = d*PI/180;
 function rad2deg(r) = r*180/PI;
 
+function translate_matrix(pos) =
+  [[1, 0, 0, pos.x],
+   [0, 1, 0, pos.y],
+   [0, 0, 1, pos.z],
+   [0, 0, 0, 1    ]];
+function rotate_x_matrix(rad) =
+  let(deg = rad2deg(-rad))
+  [[1,         0,        0, 0],
+   [0,  cos(deg), sin(deg), 0],
+   [0, -sin(deg), cos(deg), 0],
+   [0,         0,        0, 1]];
+function rotate_y_matrix(rad) =
+  let(deg = rad2deg(-rad))
+  [[cos(deg), 0, -sin(deg), 0],
+   [       0, 1,         0, 0],
+   [sin(deg), 0,  cos(deg), 0],
+   [       0, 0,         0, 1]];
+function matrix_transform(matrix, pos) =
+  let (result = matrix * [pos.x, pos.y, pos.z, 1])
+  [result.x, result.y, result.z];
+
 // Hopefully, we can get rid of this after we get rid of a lot of the hulls.
 module triangle_hulls() {
   for (i = [0 : $children-3]) {
@@ -210,24 +231,6 @@ column_radius = ((mount_width + extra_width) / 2) / sin(rad2deg(beta / 2)) + cap
 column_x_delta = -1 - column_radius * sin(rad2deg(beta));
 column_base_angle = beta * (centercol - 2);
 
-function translate_matrix(pos) =
-    [[1, 0, 0, pos.x],
-     [0, 1, 0, pos.y],
-     [0, 0, 1, pos.z],
-     [0, 0, 0, 1    ]];
-function rotate_x_matrix(rad) =
-    let(deg = rad2deg(-rad))
-    [[1,         0,        0, 0],
-     [0,  cos(deg), sin(deg), 0],
-     [0, -sin(deg), cos(deg), 0],
-     [0,         0,        0, 1]];
-function rotate_y_matrix(rad) =
-    let(deg = rad2deg(-rad))
-    [[cos(deg), 0, -sin(deg), 0],
-     [       0, 1,         0, 0],
-     [sin(deg), 0,  cos(deg), 0],
-     [       0, 0,         0, 1]];
-
 function key_placement_matrix(column, row, column_style=column_style) =
     let (
       column_styles = [
@@ -253,9 +256,12 @@ function key_placement_matrix(column, row, column_style=column_style) =
 
 function inner_wall_placement_matrix(row, direction) =
     let (
-      pos = key_placement_matrix(0, row) * [-mount_width * 0.5, direction * mount_height * 0.5, 0, 1]
+      pos = matrix_transform(key_placement_matrix(0, row), [-mount_width * 0.5, direction * mount_height * 0.5, 0]),
+      oled_adjust = [-oled("left_wall_x_offset"), 0, -oled("left_wall_z_offset")],
+      low_corner_offset = [0, oled("left_wall_lower_y_offset"), -oled("left_wall_lower_z_offset")],
+      low_corner_adjust = row == cornerrow && direction <= 0 ? low_corner_offset : [0, 0, 0]
     )
-    translate_matrix([ pos.x, pos.y, pos.z ] - [oled("left_wall_x_offset"), 0, oled("left_wall_z_offset")]);
+    translate_matrix([ pos.x, pos.y, pos.z ] + oled_adjust + low_corner_adjust);
 
 module key_place(column, row) {
     multmatrix(key_placement_matrix(column, row, column_style)) children();
@@ -608,6 +614,7 @@ module add_thumb_cluster() {
       cylinder(d=tbcj_inner_diameter, h=tbcj_thickness*0.1, center=true);
     }
   }
+  // Most of top face, between keyswitch pads
   module tbcj_connectors() {
     triangle_hulls() {
       tbcj_thumb_tl_place() web_post_tr();
@@ -674,6 +681,16 @@ module add_thumb_cluster() {
       key_place(3, lastrow) web_post_bl();
     }
   }
+  module tbcj_connection() {
+    bottom_hull() {
+      translate(matrix_transform(inner_wall_placement_matrix(cornerrow, -1), wall_locate2(-1, 0)))
+        web_post();
+      translate(matrix_transform(inner_wall_placement_matrix(cornerrow, -1), wall_locate3(-1, 0)))
+        web_post();
+      tbcj_thumb_ml_place() translate(wall_locate2(-0.3, 1)) web_post_tr();
+      tbcj_thumb_ml_place() translate(wall_locate3(-0.3, 1)) web_post_tr();
+    }
+  }
   module tbcj_place() {
     loc = [-15, -60, -12] + origin;
     translate(loc) children();
@@ -687,6 +704,7 @@ module add_thumb_cluster() {
     assert(thumb_style == "TRACKBALL_CJ", "CJ trackball is the only one supported");
     tbcj_thumb();
     tbcj_connectors();
+    tbcj_connection();
   }
 
   children();
