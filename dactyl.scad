@@ -581,10 +581,6 @@ module add_thumb_cluster() {
     multmatrix(thumb_keys[i]) children();
   }
   
-  ml_matrix = translate_matrix([-51, -25, -12] + origin) * rotate_matrix([deg2rad(6), deg2rad(-34), deg2rad(40)]);
-  module tbcj_thumb_bl_place() {
-    place_thumbkey(0) children();
-  }
   module tbcj_thumb_ml_place() {
     place_thumbkey(1) children();
   }
@@ -599,7 +595,7 @@ module add_thumb_cluster() {
     tbcj_thumb_tr_place() rotate([0, 0, thumb_plate_tr_rotation]) children();
     tbcj_thumb_tl_place() rotate([0, 0, thumb_plate_tl_rotation]) children();
     tbcj_thumb_ml_place() rotate([0, 0, thumb_plate_ml_rotation]) children();
-    tbcj_thumb_bl_place() rotate([0, 0, thumb_plate_bl_rotation]) children();
+    place_thumbkey(0) rotate([0, 0, thumb_plate_bl_rotation]) children();
   }
   module oct_corner(i, diameter) {
     r = diameter / 2;
@@ -635,8 +631,8 @@ module add_thumb_cluster() {
       tbcj_thumb_tr_place() web_post_bl();
     }
     triangle_hulls() {
-      tbcj_thumb_bl_place() web_post_tr();
-      tbcj_thumb_bl_place() web_post_br();
+      place_thumbkey(0) web_post_tr();
+      place_thumbkey(0) web_post_br();
       tbcj_thumb_ml_place() web_post_tl();
       tbcj_thumb_ml_place() web_post_bl();
     }
@@ -667,13 +663,13 @@ module add_thumb_cluster() {
     }
     triangle_hulls() {
       tbcj_place() tbcj_edge_post(4);
-      tbcj_thumb_bl_place() web_post_bl();
+      place_thumbkey(0) web_post_bl();
       tbcj_place() tbcj_edge_post(5);
-      tbcj_thumb_bl_place() web_post_br();
+      place_thumbkey(0) web_post_br();
       tbcj_place() tbcj_edge_post(6);
     }
     triangle_hulls() {
-      tbcj_thumb_bl_place() web_post_br();
+      place_thumbkey(0) web_post_br();
       tbcj_place() tbcj_edge_post(6);
       tbcj_thumb_ml_place() web_post_bl();
     }
@@ -733,7 +729,7 @@ module add_thumb_cluster() {
     }
   }
   module tbcj_walls() {
-    wall_brace(ml_matrix, -0.3, 1, ml_matrix, 0, 1) {
+    wall_brace(thumb_keys[1], -0.3, 1, thumb_keys[1], 0, 1) {
        web_post_tr();
        web_post_tl();
     }
@@ -749,7 +745,7 @@ module add_thumb_cluster() {
        web_post_tl();
        web_post_tl();
     }
-    wall_brace(ml_matrix, 0, 1, thumb_keys[0], 0, 1) {
+    wall_brace(thumb_keys[1], 0, 1, thumb_keys[0], 0, 1) {
       web_post_tl();
       web_post_tr();
     }
