@@ -570,33 +570,35 @@ module add_thumb_cluster() {
   origin = let (pos = key_placement_matrix(1, corner) * [mount_width/2, -mount_height/2, 0, 1]) [pos.x, pos.y, pos.z];
   holder_origin = [-15, -60, -12] + origin;
 
-  // Matrices for the four thumb keys
-  ml_matrix =
-    translate_matrix([-51, -25, -12]) *
-    translate_matrix(origin) *
-    rotate_matrix([deg2rad(6), deg2rad(-34), deg2rad(40)]);
+  // Matrices for the four thumb keys, inside to outside
   bl_matrix =
     translate_matrix([-56.3, -43.3, -23.5]) *
     translate_matrix(origin) *
     rotate_matrix([deg2rad(-4), deg2rad(-35), deg2rad(52)]);
+  ml_matrix =
+    translate_matrix([-51, -25, -12]) *
+    translate_matrix(origin) *
+    rotate_matrix([deg2rad(6), deg2rad(-34), deg2rad(40)]);
+  tl_matrix =
+    translate_matrix([-32.5, -14.5, -2.5]) *
+    translate_matrix(origin) *
+    rotate_matrix([deg2rad(7.5), deg2rad(-18), deg2rad(10)]);
+  tr_matrix =
+    translate_matrix([-12, -16, 3]) *
+    translate_matrix(origin) *
+    rotate_matrix([deg2rad(10), deg2rad(-15), deg2rad(10)]);
 
-  module tbcj_thumb_tr_place() {
-    translate([-12, -16, 3])
-      translate(origin)
-      rotate([10, -15, 10])
-      children();
-  }
-  module tbcj_thumb_tl_place() {
-    translate([-32.5, -14.5, -2.5])
-      translate(origin)
-      rotate([7.5, -18, 10])
-      children();
+  module tbcj_thumb_bl_place() {
+    multmatrix(bl_matrix) children();
   }
   module tbcj_thumb_ml_place() {
     multmatrix(ml_matrix) children();
   }
-  module tbcj_thumb_bl_place() {
-    multmatrix(bl_matrix) children();
+  module tbcj_thumb_tl_place() {
+    multmatrix(tl_matrix) children();
+  }
+  module tbcj_thumb_tr_place() {
+    multmatrix(tr_matrix) children();
   }
   module tbcj_thumb_layout() {
     tbcj_thumb_tr_place() rotate([0, 0, thumb_plate_tr_rotation]) children();
