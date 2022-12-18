@@ -568,6 +568,7 @@ module case_walls() {
 module add_thumb_cluster() {
   corner = reduced_inner_cols > 0 ? cornerrow : lastrow;
   origin = let (pos = key_placement_matrix(1, corner) * [mount_width/2, -mount_height/2, 0, 1]) [pos.x, pos.y, pos.z];
+  holder_origin = [-15, -60, -12] + origin;
 
   // Matrices for the four thumb keys
   ml_matrix =
@@ -756,11 +757,37 @@ module add_thumb_cluster() {
       web_post_tr();
     }
     
+    module make_walls(data) {
+      for (i = [0 : $children-2]) {
+        wall_brace(data[i][0], data[i][1], data[i][2], data[i+1][0], data[i+1][1], data[i+1][2]) {
+          children(i);
+          children(i+1);
+        }
+      }
+    }
+    
+    make_walls([
+      [bl_matrix, -1, 0],
+      [translate_matrix(holder_origin), 0, -1],
+      [translate_matrix(holder_origin), 0, -1],
+      [translate_matrix(holder_origin), 0, -1],
+      [translate_matrix(holder_origin), 1, -1],
+      [translate_matrix(holder_origin), 1, 0],
+      [key_placement_matrix(3, lastrow), 0, -1]
+    ]) {
+      web_post_bl();
+      tbcj_edge_post(4);
+      tbcj_edge_post(3);
+      tbcj_edge_post(2);
+      tbcj_edge_post(1);
+      tbcj_edge_post(0);
+      web_post_bl();
+    }
   
   }
+
   module tbcj_place() {
-    loc = [-15, -60, -12] + origin;
-    translate(loc) children();
+    translate(holder_origin) children();
   }
   module tbcj_thumb() {
     tbcj_thumb_layout() single_plate();
