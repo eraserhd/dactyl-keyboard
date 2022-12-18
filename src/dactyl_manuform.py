@@ -2877,9 +2877,6 @@ def tbcj_thumb_walls(skeleton=False):
     shape = union([shape, wall_brace(tbcj_thumb_bl_place, -1, 0, web_post_tl(), tbcj_thumb_bl_place, -1, 0, web_post_bl())])
     shape = union([shape, wall_brace(tbcj_thumb_bl_place, -1, 0, web_post_tl(), tbcj_thumb_bl_place, 0, 1, web_post_tl())])
     shape = union([shape, wall_brace(tbcj_thumb_ml_place, 0, 1, web_post_tl(), tbcj_thumb_bl_place, 0, 1, web_post_tr())])
-
-    corner = box(1,1,tbcj_thickness)
-
     points = [
         (tbcj_thumb_bl_place, -1, 0, web_post_bl()),
         (tbcj_place, 0, -1, tbcj_web_post(4)),
