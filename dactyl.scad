@@ -581,12 +581,8 @@ module add_thumb_cluster() {
     multmatrix(thumb_keys[i]) children();
   }
 
-  module tbcj_thumb_tr_place() {
-    place_thumbkey(3) children();
-  }
-  
   module tbcj_thumb_layout() {
-    tbcj_thumb_tr_place() rotate([0, 0, thumb_plate_tr_rotation]) children();
+    place_thumbkey(3) rotate([0, 0, thumb_plate_tr_rotation]) children();
     place_thumbkey(2) rotate([0, 0, thumb_plate_tl_rotation]) children();
     place_thumbkey(1) rotate([0, 0, thumb_plate_ml_rotation]) children();
     place_thumbkey(0) rotate([0, 0, thumb_plate_bl_rotation]) children();
@@ -621,8 +617,8 @@ module add_thumb_cluster() {
     triangle_hulls() {
       place_thumbkey(2) web_post_tr();
       place_thumbkey(2) web_post_br();
-      tbcj_thumb_tr_place() web_post_tl();
-      tbcj_thumb_tr_place() web_post_bl();
+      place_thumbkey(3) web_post_tl();
+      place_thumbkey(3) web_post_bl();
     }
     triangle_hulls() {
       place_thumbkey(0) web_post_tr();
@@ -636,22 +632,22 @@ module add_thumb_cluster() {
       place_thumbkey(2) web_post_bl();
       place_thumbkey(1) web_post_br();
       place_thumbkey(2) web_post_br();
-      tbcj_thumb_tr_place() web_post_bl();
-      tbcj_thumb_tr_place() web_post_br();
+      place_thumbkey(3) web_post_bl();
+      place_thumbkey(3) web_post_br();
     }
     triangle_hulls() {
       place_thumbkey(2) web_post_tl();
       key_place(0, cornerrow) web_post_bl();
       place_thumbkey(2) web_post_tr();
       key_place(0, cornerrow) web_post_br();
-      tbcj_thumb_tr_place() web_post_tl();
+      place_thumbkey(3) web_post_tl();
       key_place(1, cornerrow) web_post_bl();
-      tbcj_thumb_tr_place() web_post_tr();
+      place_thumbkey(3) web_post_tr();
       key_place(1, cornerrow) web_post_br();
       key_place(2, lastrow) web_post_bl();
-      tbcj_thumb_tr_place() web_post_tr();
+      place_thumbkey(3) web_post_tr();
       key_place(2, lastrow) web_post_bl();
-      tbcj_thumb_tr_place() web_post_br();
+      place_thumbkey(3) web_post_br();
       key_place(2, lastrow) web_post_br();
       key_place(3, lastrow) web_post_bl();
     }
@@ -671,15 +667,15 @@ module add_thumb_cluster() {
       place_thumbkey(1) web_post_bl();
       tbcj_place() tbcj_edge_post(6);
       place_thumbkey(1) web_post_br();
-      tbcj_thumb_tr_place() web_post_bl();
+      place_thumbkey(3) web_post_bl();
     }
     triangle_hulls() {
       tbcj_place() tbcj_edge_post(6);
-      tbcj_thumb_tr_place() web_post_bl();
+      place_thumbkey(3) web_post_bl();
       tbcj_place() tbcj_edge_post(7);
-      tbcj_thumb_tr_place() web_post_br();
+      place_thumbkey(3) web_post_br();
       tbcj_place() tbcj_edge_post(0);
-      tbcj_thumb_tr_place() web_post_br();
+      place_thumbkey(3) web_post_br();
       key_place(3, lastrow) web_post_bl();
     }
   }
