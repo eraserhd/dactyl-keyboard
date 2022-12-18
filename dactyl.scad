@@ -129,6 +129,16 @@ function rotate_y_matrix(rad) =
    [       0, 1,         0, 0],
    [sin(deg), 0,  cos(deg), 0],
    [       0, 0,         0, 1]];
+function rotate_z_matrix(rad) =
+  let(deg = rad2deg(rad))
+  [[cos(deg), -sin(deg), 0, 0],
+   [sin(deg), cos(deg),  0, 0],
+   [       0, 0,         1, 0],
+   [       0, 0,         0, 1]];
+function rotate_matrix(ang) =
+   rotate_z_matrix(ang.z) *
+   rotate_y_matrix(ang.y) *
+   rotate_x_matrix(ang.x);
 function matrix_transform(matrix, pos) =
   let (result = matrix * [pos.x, pos.y, pos.z, 1])
   [result.x, result.y, result.z];
@@ -558,7 +568,16 @@ module case_walls() {
 module add_thumb_cluster() {
   corner = reduced_inner_cols > 0 ? cornerrow : lastrow;
   origin = let (pos = key_placement_matrix(1, corner) * [mount_width/2, -mount_height/2, 0, 1]) [pos.x, pos.y, pos.z];
-
+  
+  ml_matrix =
+    translate_matrix([-51, -25, -12]) *
+    translate_matrix(origin) *
+    rotate_matrix([deg2rad(6), deg2rad(-34), deg2rad(40)]);
+  bl_matrix =
+    translate_matrix([-56.3, -43.3, -23.5]) *
+    translate_matrix(origin) *
+    rotate_matrix([deg2rad(-4), deg2rad(-35), deg2rad(52)]);
+  
   module tbcj_thumb_tr_place() {
     translate([-12, -16, 3])
       translate(origin)
@@ -681,6 +700,7 @@ module add_thumb_cluster() {
       key_place(3, lastrow) web_post_bl();
     }
   }
+  // inner wall connecting thumb cluster and main part
   module tbcj_connection() {
     bottom_hull() {
       translate(matrix_transform(inner_wall_placement_matrix(cornerrow, -1), wall_locate2(-1, 0)))
@@ -690,6 +710,57 @@ module add_thumb_cluster() {
       tbcj_thumb_ml_place() translate(wall_locate2(-0.3, 1)) web_post_tr();
       tbcj_thumb_ml_place() translate(wall_locate3(-0.3, 1)) web_post_tr();
     }
+    hull() {
+      translate(matrix_transform(inner_wall_placement_matrix(cornerrow, -1), wall_locate2(-1, 0)))
+        web_post();
+      translate(matrix_transform(inner_wall_placement_matrix(cornerrow, -1), wall_locate3(-1, 0)))
+        web_post();
+      tbcj_thumb_ml_place() translate(wall_locate2(-0.3, 1)) web_post_tr();
+      tbcj_thumb_ml_place() translate(wall_locate3(-0.3, 1)) web_post_tr();
+      tbcj_thumb_tl_place() web_post_tl();
+    }
+    hull() {
+      translate(matrix_transform(inner_wall_placement_matrix(cornerrow, -1), wall_locate1(-1, 0))) web_post();
+      translate(matrix_transform(inner_wall_placement_matrix(cornerrow, -1), wall_locate2(-1, 0))) web_post();
+      translate(matrix_transform(inner_wall_placement_matrix(cornerrow, -1), wall_locate3(-1, 0))) web_post();
+      tbcj_thumb_tl_place() web_post_tl();
+    }
+    hull() {
+      translate(matrix_transform(inner_wall_placement_matrix(cornerrow, -1), [0,0,0]))web_post();
+      translate(matrix_transform(inner_wall_placement_matrix(cornerrow, -1), wall_locate1(-1, 0))) web_post();
+      key_place(0, cornerrow) web_post_bl();
+      tbcj_thumb_tl_place() web_post_tl();
+    }
+    hull() {
+      tbcj_thumb_ml_place() web_post_tr();
+      tbcj_thumb_ml_place() translate(wall_locate1(-0.3, 1)) web_post_tr();
+      tbcj_thumb_ml_place() translate(wall_locate2(-0.3, 1)) web_post_tr();
+      tbcj_thumb_ml_place() translate(wall_locate3(-0.3, 1)) web_post_tr();
+      tbcj_thumb_tl_place() web_post_tl();
+    }
+  }
+  module tbcj_walls() {
+    wall_brace(ml_matrix, -0.3, 1, ml_matrix, 0, 1) {
+       web_post_tr();
+       web_post_tl();
+    }
+    wall_brace(bl_matrix, 0, 1, bl_matrix, 0, 1) {
+       web_post_tr();
+       web_post_tl();
+    }
+    wall_brace(bl_matrix, -1, 0, bl_matrix, -1, 0) {
+       web_post_tl();
+       web_post_bl();
+    }
+    wall_brace(bl_matrix, -1, 0, bl_matrix, 0, 1) {
+       web_post_tl();
+       web_post_tl();
+    }
+    wall_brace(ml_matrix, 0, 1, bl_matrix, 0, 1) {
+      web_post_tl();
+      web_post_tr();
+    }
+  
   }
   module tbcj_place() {
     loc = [-15, -60, -12] + origin;
@@ -699,12 +770,12 @@ module add_thumb_cluster() {
     tbcj_thumb_layout() single_plate();
     tbcj_place() tbcj_holder();
   }
-
   module thumb_shape() {
     assert(thumb_style == "TRACKBALL_CJ", "CJ trackball is the only one supported");
     tbcj_thumb();
     tbcj_connectors();
     tbcj_connection();
+    tbcj_walls();
   }
 
   children();
