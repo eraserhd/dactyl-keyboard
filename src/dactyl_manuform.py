@@ -3588,7 +3588,6 @@ def oled_clip_mount_frame(side='right'):
             oled_mount_height + 2 * oled_clip_thickness
             + 2 * oled_clip_undercut + 2 * oled_clip_overhang + 2 * oled_mount_rim
     )
-    hole = box(mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01)
 
     shape = box(mount_ext_width, mount_ext_height, oled_mount_depth)
     shape = difference(shape, [box(oled_mount_width, oled_mount_height, oled_mount_depth + .1)])
@@ -3629,6 +3628,7 @@ def oled_clip_mount_frame(side='right'):
         )
     )
 
+    hole = box(mount_ext_width, mount_ext_height, oled_mount_cut_depth + .01)
     hole = rotate(hole, oled_mount_rotation_xyz)
     hole = translate(hole,
         (
