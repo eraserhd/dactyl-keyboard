@@ -12,7 +12,7 @@ beta = 0.08726638888888888;
 // Column which is considered the middle for curvature purposes
 centercol = 3;
 // Row, counting from the bottom, considered the middle for curvature purposes
-centerrow_offset = 2;
+centerrow_offset = 1;
 // Additonal left-to-right angle of keys
 tenting_angle = 0.42;
 // if Rows > 5, this should warn that we want standard
@@ -755,6 +755,7 @@ module add_thumb_cluster() {
       web_post_tl();
       web_post_tr();
     }
+    
   
   }
   module tbcj_place() {
