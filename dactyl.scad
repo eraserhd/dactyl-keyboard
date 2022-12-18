@@ -630,6 +630,49 @@ module add_thumb_cluster() {
       tbcj_thumb_tr_place() web_post_bl();
       tbcj_thumb_tr_place() web_post_br();
     }
+    triangle_hulls() {
+      tbcj_thumb_tl_place() web_post_tl();
+      key_place(0, cornerrow) web_post_bl();
+      tbcj_thumb_tl_place() web_post_tr();
+      key_place(0, cornerrow) web_post_br();
+      tbcj_thumb_tr_place() web_post_tl();
+      key_place(1, cornerrow) web_post_bl();
+      tbcj_thumb_tr_place() web_post_tr();
+      key_place(1, cornerrow) web_post_br();
+      key_place(2, lastrow) web_post_bl();
+      tbcj_thumb_tr_place() web_post_tr();
+      key_place(2, lastrow) web_post_bl();
+      tbcj_thumb_tr_place() web_post_br();
+      key_place(2, lastrow) web_post_br();
+      key_place(3, lastrow) web_post_bl();
+    }
+    triangle_hulls() {
+      tbcj_place() tbcj_edge_post(4);
+      tbcj_thumb_bl_place() web_post_bl();
+      tbcj_place() tbcj_edge_post(5);
+      tbcj_thumb_bl_place() web_post_br();
+      tbcj_place() tbcj_edge_post(6);
+    }
+    triangle_hulls() {
+      tbcj_thumb_bl_place() web_post_br();
+      tbcj_place() tbcj_edge_post(6);
+      tbcj_thumb_ml_place() web_post_bl();
+    }
+    triangle_hulls() {
+      tbcj_thumb_ml_place() web_post_bl();
+      tbcj_place() tbcj_edge_post(6);
+      tbcj_thumb_ml_place() web_post_br();
+      tbcj_thumb_tr_place() web_post_bl();
+    }
+    triangle_hulls() {
+      tbcj_place() tbcj_edge_post(6);
+      tbcj_thumb_tr_place() web_post_bl();
+      tbcj_place() tbcj_edge_post(7);
+      tbcj_thumb_tr_place() web_post_br();
+      tbcj_place() tbcj_edge_post(0);
+      tbcj_thumb_tr_place() web_post_br();
+      key_place(3, lastrow) web_post_bl();
+    }
   }
   module tbcj_place() {
     loc = [-15, -60, -12] + origin;
