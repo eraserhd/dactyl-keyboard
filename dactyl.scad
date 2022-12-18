@@ -71,6 +71,19 @@ notch_width = 6.0;
 clip_thickness = 1.1;
 clip_undercut = 1.0;
 
+/* [Thumb Cluster] */
+
+thumb_style = "TRACKBALL_CJ"; // [TRACKBALL_CJ]
+thumb_plate_tr_rotation = 0.0;
+thumb_plate_tl_rotation = 0.0;
+thumb_plate_mr_rotation = 0.0;
+thumb_plate_ml_rotation = 0.0;
+thumb_plate_br_rotation = 0.0;
+thumb_plate_bl_rotation = 0.0;
+tbcj_inner_diameter = 42;
+tbcj_thickness = 2;
+tbcj_outer_diameter = 53;
+
 /* [Bottom Plate Screws] */
 
 // Position of screw inserts, relative to the case walls.
@@ -98,6 +111,17 @@ external_holder_yoffset = -4.5;
 
 function deg2rad(d) = d*PI/180;
 function rad2deg(r) = r*180/PI;
+
+// Hopefully, we can get rid of this after we get rid of a lot of the hulls.
+module triangle_hulls() {
+  for (i = [0 : $children-3]) {
+    hull() {
+      children(i);
+      children(i+1);
+      children(i+2);
+    }
+  }
+}
 
 plate_styles = [
   ["HOLE",        hole_keyswitch_height,     hole_keyswitch_width],
@@ -282,7 +306,7 @@ module connectors() {
   for (column = [0 : Columns-2]) {
     iterrows = (reduced_inner_cols <= column && column < (Columns - reduced_outer_cols-1)) ? lastrow+1 : lastrow;
     for (row = [0 : iterrows-1]) {
-      hull() { // triangle_hulls()??
+      triangle_hulls() {
         key_place(column + 1, row) web_post_tl();
         key_place(column, row) web_post_tr();
         key_place(column + 1, row) web_post_bl();
@@ -295,7 +319,7 @@ module connectors() {
   for (column = [0 : Columns-1]) {
     iterrows = (reduced_inner_cols <= column && column < (Columns - reduced_outer_cols)) ? lastrow : cornerrow;
     for (row = [0 : iterrows - 1]) {
-      hull() { // triangle_hulls()??
+      triangle_hulls() {
         key_place(column, row) web_post_bl();
         key_place(column, row) web_post_br();
         key_place(column, row + 1) web_post_tl();
@@ -308,7 +332,7 @@ module connectors() {
   for (column = [0 : Columns-2]) {
     iterrows = (reduced_inner_cols <= column && column < (Columns - reduced_outer_cols-1)) ? lastrow : cornerrow;
     for (row = [0 : iterrows - 1]) {
-      hull() {// triangle_hulls()??
+      triangle_hulls() {
         key_place(column, row) web_post_br();
         key_place(column, row + 1) web_post_tr();
         key_place(column + 1, row) web_post_bl();
@@ -316,7 +340,7 @@ module connectors() {
       }
     }
     if (column == reduced_inner_cols-1) {
-      hull() {// triangle_hulls()??
+      triangle_hulls() {
         key_place(column + 1, iterrows) web_post_bl();
         key_place(column, iterrows) web_post_br();
         key_place(column + 1, iterrows + 1) web_post_tl();
@@ -324,7 +348,7 @@ module connectors() {
       }
     }
     if (column == (Columns - reduced_outer_cols - 1)) {
-      hull() {// triangle_hulls()??
+      triangle_hulls() {
         key_place(column, iterrows) web_post_br();
         key_place(column + 1, iterrows) web_post_bl();
         key_place(column, iterrows + 1) web_post_tr();
@@ -523,6 +547,109 @@ module case_walls() {
   front_wall();
 }
 
+// == thumb cluster ==
+
+module add_thumb_cluster() {
+  corner = reduced_inner_cols > 0 ? cornerrow : lastrow;
+  origin = let (pos = key_placement_matrix(1, corner) * [mount_width/2, -mount_height/2, 0, 1]) [pos.x, pos.y, pos.z];
+
+  module tbcj_thumb_tr_place() {
+    translate([-12, -16, 3])
+      translate(origin)
+      rotate([10, -15, 10])
+      children();
+  }
+  module tbcj_thumb_tl_place() {
+    translate([-32.5, -14.5, -2.5])
+      translate(origin)
+      rotate([7.5, -18, 10])
+      children();
+  }
+  module tbcj_thumb_ml_place() {
+    translate([-51, -25, -12])
+      translate(origin)
+      rotate([6, -34, 40])
+      children();
+  }
+  module tbcj_thumb_bl_place() {
+    translate([-56.3, -43.3, -23.5])
+      translate(origin)
+      rotate([-4, -35, 52])
+      children();
+  }
+  module tbcj_thumb_layout() {
+    tbcj_thumb_tr_place() rotate([0, 0, thumb_plate_tr_rotation]) children();
+    tbcj_thumb_tl_place() rotate([0, 0, thumb_plate_tl_rotation]) children();
+    tbcj_thumb_ml_place() rotate([0, 0, thumb_plate_ml_rotation]) children();
+    tbcj_thumb_bl_place() rotate([0, 0, thumb_plate_bl_rotation]) children();
+  }
+  module oct_corner(i, diameter) {
+    r = diameter / 2;
+    j = (i+1)%8;
+    m = r * tan(22.5);
+    x = [ m,  r,  r,  m, -m, -r, -r, -m];
+    y = [ r,  m, -m, -r, -r, -m,  m,  r];
+    translate([x[j], y[j], 0]) children();
+  }
+  module tbcj_edge_post(i) {
+    oct_corner(i, tbcj_outer_diameter)
+      cube([post_size, post_size, tbcj_thickness], center=true);
+  }
+  module tbcj_holder() {
+    difference() {
+      for (i = [0 : 7]) {
+        hull() {
+          cube([post_size, post_size, tbcj_thickness], center=true);
+          tbcj_edge_post(i);
+          tbcj_edge_post(i+1);
+        }
+      }
+      //FIXME: seems totally inside the octagon?
+      cylinder(d=tbcj_inner_diameter, h=tbcj_thickness*0.1, center=true);
+    }
+  }
+  module tbcj_connectors() {
+    triangle_hulls() {
+      tbcj_thumb_tl_place() web_post_tr();
+      tbcj_thumb_tl_place() web_post_br();
+      tbcj_thumb_tr_place() web_post_tl();
+      tbcj_thumb_tr_place() web_post_bl();
+    }
+    triangle_hulls() {
+      tbcj_thumb_bl_place() web_post_tr();
+      tbcj_thumb_bl_place() web_post_br();
+      tbcj_thumb_ml_place() web_post_tl();
+      tbcj_thumb_ml_place() web_post_bl();
+    }
+    triangle_hulls() {
+      tbcj_thumb_tl_place() web_post_tl();
+      tbcj_thumb_ml_place() web_post_tr();
+      tbcj_thumb_tl_place() web_post_bl();
+      tbcj_thumb_ml_place() web_post_br();
+      tbcj_thumb_tl_place() web_post_br();
+      tbcj_thumb_tr_place() web_post_bl();
+      tbcj_thumb_tr_place() web_post_br();
+    }
+  }
+  module tbcj_place() {
+    loc = [-15, -60, -12] + origin;
+    translate(loc) children();
+  }
+  module tbcj_thumb() {
+    tbcj_thumb_layout() single_plate();
+    tbcj_place() tbcj_holder();
+  }
+
+  module thumb_shape() {
+    assert(thumb_style == "TRACKBALL_CJ", "CJ trackball is the only one supported");
+    tbcj_thumb();
+    tbcj_connectors();
+  }
+
+  children();
+  thumb_shape();
+}
+
 // == screw inserts ==
 
 all_screw_insert_positions =
@@ -706,6 +833,7 @@ module cut_off_bottom() {
 
 module model_side() {
   cut_off_bottom()
+    add_thumb_cluster()
     add_controller()
     add_key_holes()
     add_oled()
