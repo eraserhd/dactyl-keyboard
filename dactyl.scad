@@ -420,33 +420,33 @@ module bottom_hull(height = 0.001) {
 function wall_locate1(dx, dy) = [dx * wall_thickness, dy * wall_thickness, -1];
 function wall_locate2(dx, dy) = [dx * wall_x_offset, dy * wall_y_offset, -wall_z_offset];
 function wall_locate3(dx, dy, back) = back ?
-    [
-        dx * (wall_x_offset + wall_base_x_thickness),
-        dy * (wall_y_offset + wall_base_back_thickness),
-        -wall_z_offset
-    ] : [
-        dx * (wall_x_offset + wall_base_x_thickness),
-        dy * (wall_y_offset + wall_base_y_thickness),
-        -wall_z_offset
-    ];
+  [
+    dx * (wall_x_offset + wall_base_x_thickness),
+    dy * (wall_y_offset + wall_base_back_thickness),
+    -wall_z_offset
+  ] : [
+    dx * (wall_x_offset + wall_base_x_thickness),
+    dy * (wall_y_offset + wall_base_y_thickness),
+    -wall_z_offset
+  ];
 
 module wall_brace(place1, dx1, dy1, place2, dx2, dy2, back=false) {
-    hull() {
-        multmatrix(place1) children(0);
-        multmatrix(place1) translate(wall_locate1(dx1, dy1)) children(0);
-        multmatrix(place1) translate(wall_locate2(dx1, dy1)) children(0);
-        multmatrix(place1) translate(wall_locate3(dx1, dy1, back)) children(0);
-        multmatrix(place2) children(1);
-        multmatrix(place2) translate(wall_locate1(dx2, dy2)) children(1);
-        multmatrix(place2) translate(wall_locate2(dx2, dy2)) children(1);
-        multmatrix(place2) translate(wall_locate3(dx2, dy2, back)) children(1);
-    }
-    bottom_hull() {
-        multmatrix(place1) translate(wall_locate2(dx1, dy1)) children(0);
-        multmatrix(place1) translate(wall_locate3(dx1, dy1, back)) children(0);
-        multmatrix(place2) translate(wall_locate2(dx2, dy2)) children(1);
-        multmatrix(place2) translate(wall_locate3(dx2, dy2, back)) children(1);
-    }
+  hull() {
+    multmatrix(place1) children(0);
+    multmatrix(place1) translate(wall_locate1(dx1, dy1)) children(0);
+    multmatrix(place1) translate(wall_locate2(dx1, dy1)) children(0);
+    multmatrix(place1) translate(wall_locate3(dx1, dy1, back)) children(0);
+    multmatrix(place2) children(1);
+    multmatrix(place2) translate(wall_locate1(dx2, dy2)) children(1);
+    multmatrix(place2) translate(wall_locate2(dx2, dy2)) children(1);
+    multmatrix(place2) translate(wall_locate3(dx2, dy2, back)) children(1);
+  }
+  bottom_hull() {
+    multmatrix(place1) translate(wall_locate2(dx1, dy1)) children(0);
+    multmatrix(place1) translate(wall_locate3(dx1, dy1, back)) children(0);
+    multmatrix(place2) translate(wall_locate2(dx2, dy2)) children(1);
+    multmatrix(place2) translate(wall_locate3(dx2, dy2, back)) children(1);
+  }
 }
 
 module key_wall_brace(x1, y1, dx1, dy1, x2, y2, dx2, dy2, back=false) {
@@ -600,16 +600,12 @@ module add_thumb_cluster() {
       cube([post_size, post_size, tbcj_thickness], center=true);
   }
   module tbcj_holder() {
-    difference() {
-      for (i = [0 : 7]) {
-        hull() {
-          cube([post_size, post_size, tbcj_thickness], center=true);
-          tbcj_edge_post(i);
-          tbcj_edge_post(i+1);
-        }
+    for (i = [0 : 7]) {
+      hull() {
+        cube([post_size, post_size, tbcj_thickness], center=true);
+        tbcj_edge_post(i);
+        tbcj_edge_post(i+1);
       }
-      //FIXME: seems totally inside the octagon?
-      cylinder(d=tbcj_inner_diameter, h=tbcj_thickness*0.1, center=true);
     }
   }
   // Most of top face, between keyswitch pads
@@ -774,6 +770,40 @@ module add_thumb_cluster() {
     tbcj_thumb_layout() single_plate();
     tbcj_place() tbcj_holder();
   }
+  
+  module add_trackball_socket() {
+    trackball_diameter = 34;
+    trackball_clearance = 1;
+    wall_thickness = 3;
+    flange_height = 5;
+    
+    outside_diameter = 2*wall_thickness + 2*trackball_clearance + trackball_diameter;
+    inside_diameter = 2*trackball_clearance + trackball_diameter;
+    
+    module hole() {
+      sphere(d=inside_diameter);
+      translate([0, 0, flange_height/2])
+        cylinder(d=inside_diameter, h=flange_height+0.01, center=true);
+    }
+    
+    module shell() {
+      difference() {
+        sphere(d=outside_diameter);
+        translate([0,0,50]) cube([100,100,100],center=true);
+      }
+      translate([0, 0, flange_height/2])
+        cylinder(d=outside_diameter, h=flange_height, center=true);
+    }
+
+    difference() {
+      union() {
+        children();
+        tbcj_place() shell();
+      }
+      tbcj_place() hole();
+    }
+  }
+
   module thumb_shape() {
     assert(thumb_style == "TRACKBALL_CJ", "CJ trackball is the only one supported");
     tbcj_thumb();
@@ -783,7 +813,8 @@ module add_thumb_cluster() {
   }
 
   children();
-  thumb_shape();
+  add_trackball_socket()
+    thumb_shape();
 }
 
 // == screw inserts ==
