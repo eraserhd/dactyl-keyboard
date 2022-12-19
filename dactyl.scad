@@ -109,6 +109,8 @@ external_holder_yoffset = -4.5;
 
 // =========================================================================================================
 
+use <trackball_socket.scad>;
+
 function deg2rad(d) = d*PI/180;
 function rad2deg(r) = r*180/PI;
 
@@ -771,39 +773,6 @@ module add_thumb_cluster() {
     tbcj_place() tbcj_holder();
   }
   
-  module add_trackball_socket() {
-    trackball_diameter = 34;
-    trackball_clearance = 1;
-    wall_thickness = 3;
-    flange_height = 5;
-    
-    outside_diameter = 2*wall_thickness + 2*trackball_clearance + trackball_diameter;
-    inside_diameter = 2*trackball_clearance + trackball_diameter;
-    
-    module hole() {
-      sphere(d=inside_diameter);
-      translate([0, 0, flange_height/2])
-        cylinder(d=inside_diameter, h=flange_height+0.01, center=true);
-    }
-    
-    module shell() {
-      difference() {
-        sphere(d=outside_diameter);
-        translate([0,0,50]) cube([100,100,100],center=true);
-      }
-      translate([0, 0, flange_height/2])
-        cylinder(d=outside_diameter, h=flange_height, center=true);
-    }
-
-    difference() {
-      union() {
-        children();
-        tbcj_place() shell();
-      }
-      tbcj_place() hole();
-    }
-  }
-
   module thumb_shape() {
     assert(thumb_style == "TRACKBALL_CJ", "CJ trackball is the only one supported");
     tbcj_thumb();
@@ -813,7 +782,7 @@ module add_thumb_cluster() {
   }
 
   children();
-  add_trackball_socket()
+  add_trackball_socket(ball_origin)
     thumb_shape();
 }
 
