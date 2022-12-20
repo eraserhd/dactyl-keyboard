@@ -20,7 +20,7 @@ module add_trackball_socket(position) {
   socket_inside_diameter = 2*trackball_clearance + trackball_diameter;
   bearing_distance_from_ball_center = bearing_diameter/2 + trackball_diameter/2;
   bearing_y = -sqrt(pow(bearing_distance_from_ball_center, 2)+pow(bearing_z, 2));
-  bearing_location = [0, bearing_y, bearing_z];
+  bearing_offset = [0, bearing_y, bearing_z];
 
   module housing_part(diameter, width) {
     cylinder(d=diameter, h=width, center=true, $fn=25);
@@ -32,32 +32,29 @@ module add_trackball_socket(position) {
   }
 
   module bearing_housing() {
-    translate(bearing_location)
-      rotate([0, 90, 0]) {
-        housing_part(diameter=bearing_housing_diameter, width=bearing_housing_width);
-        housing_part(diameter=shaft_housing_diameter, width=shaft_housing_width);
+    rotate([0, 90, 0]) {
+      housing_part(diameter=bearing_housing_diameter, width=bearing_housing_width);
+      housing_part(diameter=shaft_housing_diameter, width=shaft_housing_width);
       }
   }
 
-  module bearing_hole() {
-    translate(bearing_location)
-      rotate([0, 90, 0]) {
-        cylinder(d=shaft_diameter, h=shaft_length, center=true, $fn=25);
-        rotate([0, 0, 45])
-          translate([0, socket_inside_diameter/8, 0])
-            cube([shaft_diameter, socket_inside_diameter/4, shaft_length], center=true);
-            
-        housing_part(diameter=8.5, width=bearing_clearing_width);
-      }
+  module bearing_cutout() {
+    rotate([0, 90, 0]) {
+      cylinder(d=shaft_diameter, h=shaft_length, center=true, $fn=25);
+      rotate([0, 0, 45])
+        translate([0, socket_inside_diameter/8, 0])
+          cube([shaft_diameter, socket_inside_diameter/4, shaft_length], center=true);
+      housing_part(diameter=8.5, width=bearing_clearing_width);
+    }
   }
 
-  module hole() {
+  module trackball_cutout() {
     sphere(d=socket_inside_diameter);
     translate([0, 0, flange_height/2])
       cylinder(d=socket_inside_diameter, h=flange_height+0.01, center=true);
   }
 
-  module shell() {
+  module trackball_housing() {
     difference() {
       sphere(d=socket_outside_diameter);
       translate([0,0,50]) cube([100,100,100],center=true);
@@ -67,21 +64,28 @@ module add_trackball_socket(position) {
   }
   
   module place_bearings() {
-    children();
-    rotate([0, 0, 120]) children();
-    rotate([0, 0, 240]) children();
+    translate(bearing_offset) children();
+    rotate([0, 0, 120]) translate(bearing_offset) children();
+    rotate([0, 0, 240]) translate(bearing_offset) children();
   }
 
   difference() {
     union() {
       children();
-      translate(position) shell();
-      translate(position) place_bearings() bearing_housing();
+      translate(position) {
+        trackball_housing();
+        place_bearings() bearing_housing();
+      }
     }
-    translate(position) hole();
-    translate(position) place_bearings() bearing_hole();
+    translate(position) {
+      trackball_cutout();
+      place_bearings() bearing_cutout();
+    }
   }
 }
+
+//FIXME: Sensor screws
+//FIXME: Sensor cutout
 
 add_trackball_socket([0,0,0])
     translate([0,0,1.5])
