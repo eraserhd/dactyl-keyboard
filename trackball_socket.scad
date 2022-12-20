@@ -33,7 +33,7 @@ module add_trackball_socket(
     rotate([0, 90, 0]) {
       housing_part(diameter=bearing_housing_diameter, width=bearing_housing_width);
       housing_part(diameter=shaft_housing_diameter, width=shaft_housing_width);
-      }
+    }
   }
 
   module bearing_cutout() {
