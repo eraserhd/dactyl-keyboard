@@ -7,7 +7,8 @@ module add_trackball_socket(
   bearing_diameter = 6,
   bearing_width = 2.5,
   bearing_shaft_diameter = 3,
-  bearing_shaft_length = 7.5
+  bearing_shaft_length = 7.5,
+  heat_set_insert_diameter = 2.25
 ) {
   bearing_clearing_width = bearing_width + 1;
   bearing_housing_width = bearing_clearing_width + 2;
@@ -90,7 +91,7 @@ module add_trackball_socket(
     thickness = sensor_lens_height_over_board + 4;
     dist = -trackball_diameter/2 - sensor_distance + thickness/2;
     translate([0, 0, dist])
-      cube([sensor_width, sensor_length, thickness+.1], center=true);
+      cube([sensor_width, sensor_length, thickness], center=true);
   }
 
   module sensor_bracket_cutout() {
@@ -127,6 +128,13 @@ module add_trackball_socket(
       cylinder(d=7, h=sensor_lens_height_over_board, center=true);
   }
 
+  module heat_set_insert_hole() {
+    height = sensor_lens_height_over_board + 2;
+    dist = -trackball_diameter/2 - sensor_distance + sensor_lens_height_over_board/2;
+    translate([0, 0, dist - 0.01])
+      cylinder(d=heat_set_insert_diameter, h=sensor_lens_height_over_board, center=true, $fn=10);
+  }
+
   difference() {
     union() {
       children();
@@ -142,11 +150,11 @@ module add_trackball_socket(
       trackball_cutout();
       place_bearings() bearing_cutout();
       sensor_bracket_cutout();
+      translate([0, sensor_screw_distance/2, 0]) heat_set_insert_hole();
+      translate([0, -sensor_screw_distance/2, 0]) heat_set_insert_hole();
     }
   }
 }
-
-//FIXME: Sensor screws
 
 add_trackball_socket([0,0,0])
     translate([0,0,1.5])
