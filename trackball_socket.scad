@@ -14,6 +14,21 @@ module add_trackball_socket(
   bearing_housing_diameter = bearing_diameter + 4;
   shaft_housing_width = bearing_shaft_length + 2;
   shaft_housing_diameter = bearing_shaft_diameter + 4;
+  
+  // Per PWM3389 specs and seller:
+  // https://www.tindie.com/products/jkicklighter/pmw3389-motion-sensor/#specs
+  sensor_distance = 2.1;
+  sensor_screw_distance = 24;
+  sensor_screw_hole_diameter = 2.44; // fits 2-56 screw
+  sensor_width = 21;
+  sensor_length = 28;
+  sensor_height = 9;
+
+  // Measured with micrometers:
+  sensor_lens_width = 19;
+  sensor_lens_length = 21.5;
+  sensor_lens_corner_radius = 6.5;
+  sensor_lens_height_over_board = 3.5;
 
   bearing_z_offset = -6.5;
 
@@ -71,23 +86,67 @@ module add_trackball_socket(
     rotate([0, 0, 240]) translate(bearing_offset) children();
   }
 
+  module sensor_bracket() {
+    thickness = sensor_lens_height_over_board + 4;
+    dist = -trackball_diameter/2 - sensor_distance + thickness/2;
+    translate([0, 0, dist])
+      cube([sensor_width, sensor_length, thickness+.1], center=true);
+  }
+
+  module sensor_bracket_cutout() {
+    corner_radius = sensor_lens_corner_radius + 1;
+    lens_cutout_height = trackball_diameter/2 + sensor_distance + sensor_lens_height_over_board + 1;
+    
+    module corner() {
+      translate([0, 0, -lens_cutout_height/2])
+        cylinder(r=corner_radius, h=lens_cutout_height, center=true);
+    }
+
+    module corners() {
+      x_delta = sensor_lens_width/2 - corner_radius;
+      y_delta = sensor_lens_length/2 - corner_radius;
+      for (x_dir = [-1,1], y_dir = [-1,1])
+        translate([x_dir * x_delta, y_dir * y_delta, 0]) corner();
+    }
+
+    module sides() {
+      translate([0, 0, -lens_cutout_height/2]) {
+        cube([sensor_lens_width, sensor_lens_length - 2*sensor_lens_corner_radius, lens_cutout_height], center=true);
+        cube([sensor_lens_width - 2*sensor_lens_corner_radius, sensor_lens_length, lens_cutout_height], center=true);
+      }
+    }
+
+    corners();
+    sides();
+  }
+
+  module heat_set_insert_housing() {
+    height = sensor_lens_height_over_board + 2;
+    dist = -trackball_diameter/2 - sensor_distance + sensor_lens_height_over_board/2;
+    translate([0, 0, dist])
+      cylinder(d=7, h=sensor_lens_height_over_board, center=true);
+  }
+
   difference() {
     union() {
       children();
       translate(position) {
         trackball_housing();
         place_bearings() bearing_housing();
+        sensor_bracket();
+        translate([0, sensor_screw_distance/2, 0]) heat_set_insert_housing();
+        translate([0, -sensor_screw_distance/2, 0]) heat_set_insert_housing();
       }
     }
     translate(position) {
       trackball_cutout();
       place_bearings() bearing_cutout();
+      sensor_bracket_cutout();
     }
   }
 }
 
 //FIXME: Sensor screws
-//FIXME: Sensor cutout
 
 add_trackball_socket([0,0,0])
     translate([0,0,1.5])
