@@ -14,13 +14,10 @@ module add_trackball_socket(position) {
   shaft_housing_width = shaft_length + 2;
   shaft_housing_diameter = shaft_diameter + 4;
 
-  bearing_z = -6.5;
+  bearing_z_offset = -6.5;
 
   socket_outside_diameter = 2*wall_thickness + 2*trackball_clearance + trackball_diameter;
   socket_inside_diameter = 2*trackball_clearance + trackball_diameter;
-  bearing_distance_from_ball_center = bearing_diameter/2 + trackball_diameter/2;
-  bearing_y = -sqrt(pow(bearing_distance_from_ball_center, 2)+pow(bearing_z, 2));
-  bearing_offset = [0, bearing_y, bearing_z];
 
   module housing_part(diameter, width) {
     cylinder(d=diameter, h=width, center=true, $fn=25);
@@ -64,6 +61,10 @@ module add_trackball_socket(position) {
   }
   
   module place_bearings() {
+    bearing_distance_from_ball_center = bearing_diameter/2 + trackball_diameter/2;
+    bearing_y_offset = -sqrt(pow(bearing_distance_from_ball_center, 2)+pow(bearing_z_offset, 2));
+    bearing_offset = [0, bearing_y_offset, bearing_z_offset];
+    
     translate(bearing_offset) children();
     rotate([0, 0, 120]) translate(bearing_offset) children();
     rotate([0, 0, 240]) translate(bearing_offset) children();
